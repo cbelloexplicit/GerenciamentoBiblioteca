@@ -1,0 +1,58 @@
+TABELAS:
+	usuarios.csv: Armazena todos os usuários (Alunos, Professores, Admins, Bibliotecários).
+		Colunas: 
+			id, 
+			nome, 
+			matricula, 
+			senha_hash, 
+			tipo_usuario (ex: "ALUNO", "PROFESSOR", "ADMIN", "BIBLIO")
+	livros.csv: O acervo da biblioteca.
+		Colunas: 
+			id, 
+			titulo, 
+			autor, 
+			genero_id, 
+			idade_min, 
+			total_copias, 
+			copias_disponiveis
+	generos.csv: Para o "Gerenciar Gêneros Literários".
+		Colunas: 
+			id, 
+			nome_genero
+	emprestimos.csv: Histórico de todos os empréstimos.
+		Colunas: 
+			id_emprestimo, 
+			livro_id, 
+			aluno_id, 
+			data_emprestimo, 
+			data_devolucao_prevista, 
+			data_devolucao_real (fica em branco se não devolvido)
+	multas.csv: Controle de multas.
+		Colunas: 
+			id_multa, 
+			emprestimo_id, 
+			aluno_id, 
+			valor, 
+			status (ex: "PENDENTE", "PAGA")
+	turmas.csv: Para o "Programa de Leitura Trimestral".
+		Colunas: 
+			id_turma, 
+			nome_turma, 
+			professor_id
+	turma_alunos.csv: Mapeia quais alunos estão em quais turmas (relação N-para-N).
+		Colunas: 
+			turma_id, 
+			aluno_id
+	programa_leitura.csv: Registra as atribuições - programa de leitura.
+		Colunas: 
+			id_programa, 
+			turma_id, 
+			aluno_id, 
+			livro_id, 
+			trimestre, 
+			ano
+	logs_acesso.csv: Para o caso de uso "Gerar Log de Acesso".
+		Colunas: 
+			timestamp, 
+			usuario_id, 
+			acao (ex: "LOGIN", "LOGOUT")
