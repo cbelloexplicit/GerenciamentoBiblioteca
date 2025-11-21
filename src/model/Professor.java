@@ -1,4 +1,18 @@
 package model;
 
 public class Professor extends Usuario {
+    // Construtor completo
+    public Professor(long id, String nome, String matricula, String senha, boolean ativo) {
+        super(id, nome, matricula, senha, ativo);
+    }
+
+    // Construtor para novos cadastros
+    public Professor(String nome, String matricula, String senha) {
+        super(nome, matricula, senha);
+    }
+
+    @Override
+    public String getTipo() {
+        return "PROFESSOR";
+    }
 }

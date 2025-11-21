@@ -2,25 +2,44 @@ package model;
 
 public abstract class Usuario {
 
-    protected String id_usuario;
+    protected long id;
     protected String nome;
-    protected int matricula;
-    protected String senha_hash;
-    protected String tipo_usuario;
+    protected String matricula;
+    protected String senha;
+    protected boolean ativo;
 
-    public Usuario(String id_usuario, String nome, int matricula, String senha_hash, String tipo_usuario){
-        this.id_usuario = id_usuario;
+    public Usuario() {
+    }
+
+    // Construtor completo
+    public Usuario(long id, String nome, String matricula, String senha, boolean ativo) {
+        this.id = id;
+        this.nome = nome;
         this.matricula = matricula;
-        this.senha_hash = senha_hash;
-        this.tipo_usuario = tipo_usuario;
+        this.senha = senha;
+        this.ativo = ativo;
     }
 
-    public void setId_usuario(String id_usuario) {
-        this.id_usuario = id_usuario;
+    // Construtor sem ID (usado antes de salvar no arquivo)
+    public Usuario(String nome, String matricula, String senha) {
+        this.nome = nome;
+        this.matricula = matricula;
+        this.senha = senha;
+        this.ativo = true; // Por padrão, nasce ativo
     }
 
-    public String getId_usuario() {
-        return id_usuario;
+    // --- MÉTODOS ABSTRATOS ---
+    // Cada filho será obrigado a responder qual é o seu tipo.
+    public abstract String getTipo();
+
+    // --- GETTERS E SETTERS ---
+
+    public long getId() {
+        return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
     }
 
     public String getNome() {
@@ -31,38 +50,32 @@ public abstract class Usuario {
         this.nome = nome;
     }
 
-    public int getMatricula() {
+    public String getMatricula() {
         return matricula;
     }
 
-    public void setMatricula(int matricula) {
+    public void setMatricula(String matricula) {
         this.matricula = matricula;
     }
 
-    public String getSenha_hash() {
-        return senha_hash;
+    public String getSenha() {
+        return senha;
     }
 
-    public void setSenha_hash(String senha_hash) {
-        this.senha_hash = senha_hash;
+    public void setSenha(String senha) {
+        this.senha = senha;
     }
 
-    public String getTipo_usuario() {
-        return tipo_usuario;
+    public boolean isAtivo() {
+        return ativo;
     }
 
-    public void setTipo_usuario(String tipo_usuario) {
-        this.tipo_usuario = tipo_usuario;
+    public void setAtivo(boolean ativo) {
+        this.ativo = ativo;
     }
 
     @Override
     public String toString() {
-        return "Usuario{" +
-                "id_usuario='" + id_usuario + '\'' +
-                ", nome='" + nome + '\'' +
-                ", matricula=" + matricula +
-                ", senha_hash='" + senha_hash + '\'' +
-                ", tipo_usuario='" + tipo_usuario + '\'' +
-                '}';
+        return "ID: " + id + " | Nome: " + nome + " | Matrícula: " + matricula + " | Tipo: " + getTipo();
     }
 }

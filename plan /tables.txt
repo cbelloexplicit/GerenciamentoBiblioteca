@@ -6,11 +6,6 @@ TABELAS:
 			matricula, 
 			senha_hash, 
 			tipo_usuario (ex: "ALUNO", "PROFESSOR", "ADMIN", "BIBLIO")
-	-------------------------- model OK
-
-	    Alunos:
-	        id_Aluno
-	        data_nascimento,
 
 
 	livros: O acervo da biblioteca.

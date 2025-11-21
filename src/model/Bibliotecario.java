@@ -1,7 +1,18 @@
 package model;
 
 public class Bibliotecario extends Usuario{
-    public Bibliotecario(String id_usuario, String nome, int matricula, String senha_hash, String tipo_usuario) {
-        super(id_usuario, nome, matricula, senha_hash, tipo_usuario);
+    // Construtor completo
+    public Bibliotecario(long id, String nome, String matricula, String senha, boolean ativo) {
+        super(id, nome, matricula, senha, ativo);
+    }
+
+    // Construtor para novos cadastros
+    public Bibliotecario(String nome, String matricula, String senha) {
+        super(nome, matricula, senha);
+    }
+
+    @Override
+    public String getTipo() {
+        return "BIBLIOTECÁRIO";
     }
 }
