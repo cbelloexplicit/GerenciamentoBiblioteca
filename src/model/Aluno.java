@@ -1,20 +1,22 @@
 package model;
 
 public class Aluno extends Usuario {
-    private String turma;
+        private String turma;
+        private String dataNascimento;
 
-    // Construtor completo
-    public Aluno(long id, String nome, String matricula, String senha, boolean ativo, String turma) {
+    public Aluno(long id, String nome, String matricula, String senha, boolean ativo, String turma, String dataNascimento) {
         super(id, nome, matricula, senha, ativo);
         this.turma = turma;
+        this.dataNascimento = dataNascimento;
     }
 
-    // Construtor para novos cadastros
-    public Aluno(String nome, String matricula, String senha, String turma) {
+    // Construtor para novo cadastro
+    public Aluno(String nome, String matricula, String senha, String turma, String dataNascimento) {
         super(nome, matricula, senha);
         this.turma = turma;
-
+        this.dataNascimento = dataNascimento;
     }
+
     public String getTurma() {
         return turma;
     }
@@ -22,20 +24,15 @@ public class Aluno extends Usuario {
         this.turma = turma;
     }
 
+    public String getDataNascimento() {
+        return dataNascimento;
+    }
+
+    public void setDataNascimento(String dataNascimento) {
+        this.dataNascimento = dataNascimento;
+    }
     @Override
     public String getTipo() {
         return "ALUNO";
-    }
-
-    @Override
-    public String toString() {
-        return "Aluno{" +
-                "turma='" + turma + '\'' +
-                ", id=" + id +
-                ", nome='" + nome + '\'' +
-                ", matricula='" + matricula + '\'' +
-                ", senha='" + senha + '\'' +
-                ", ativo=" + ativo +
-                '}';
     }
 }

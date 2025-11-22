@@ -5,10 +5,12 @@ import java.util.List;
 
 public class Turma {
     private long id;
-    private String nome;
-    private int anoLetivo;
-    private Professor professorResponsavel;
+    private String nome;       // Ex: "3º Ano A"
+    private int anoLetivo;     // Ex: 2025
+    private Professor professorResponsavel; // Associação
 
+    // Esta lista não vai direto para o CSV da Turma,
+    // ela é preenchida pelo DAO buscando no alunos.csv quem tem essa turma.
     private List<Aluno> alunos;
 
     public Turma(long id, String nome, int anoLetivo, Professor professorResponsavel) {
@@ -29,33 +31,17 @@ public class Turma {
     }
 
     // Getters e Setters
-    public long getId() {
-        return id;
-    }
-    public void setId(long id) {
-        this.id = id;
-    }
+    public long getId() { return id; }
+    public void setId(long id) { this.id = id; }
 
-    public String getNome() {
-        return nome;
-    }
-    public void setNome(String nome) {
-        this.nome = nome;
-    }
+    public String getNome() { return nome; }
+    public void setNome(String nome) { this.nome = nome; }
 
-    public int getAnoLetivo() {
-        return anoLetivo;
-    }
-    public void setAnoLetivo(int anoLetivo) {
-        this.anoLetivo = anoLetivo;
-    }
+    public int getAnoLetivo() { return anoLetivo; }
+    public void setAnoLetivo(int anoLetivo) { this.anoLetivo = anoLetivo; }
 
-    public Professor getProfessorResponsavel() {
-        return professorResponsavel;
-    }
-    public void setProfessorResponsavel(Professor professorResponsavel) {
-        this.professorResponsavel = professorResponsavel;
-    }
+    public Professor getProfessorResponsavel() { return professorResponsavel; }
+    public void setProfessorResponsavel(Professor professorResponsavel) { this.professorResponsavel = professorResponsavel; }
 
     @Override
     public String toString() {

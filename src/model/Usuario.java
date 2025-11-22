@@ -1,17 +1,18 @@
 package model;
 
 public abstract class Usuario {
-
-    protected long id;
+    // atributos gerais (qualquer usuario tem) protegidos:
+    protected long  id;
     protected String nome;
     protected String matricula;
     protected String senha;
     protected boolean ativo;
 
-    public Usuario() {
+    //construtor vazio
+    public Usuario(){
     }
 
-    // Construtor completo
+    //construtor completo
     public Usuario(long id, String nome, String matricula, String senha, boolean ativo) {
         this.id = id;
         this.nome = nome;
@@ -20,19 +21,18 @@ public abstract class Usuario {
         this.ativo = ativo;
     }
 
-    // Construtor sem ID (usado antes de salvar no arquivo)
+    //construtor sem ID
     public Usuario(String nome, String matricula, String senha) {
         this.nome = nome;
         this.matricula = matricula;
         this.senha = senha;
-        this.ativo = true; // Por padrão, nasce ativo
+        this.ativo = true;
     }
 
-    // --- MÉTODOS ABSTRATOS ---
-    // Cada filho será obrigado a responder qual é o seu tipo.
+    //metdo abstrato para cada filho responder seu tipo
     public abstract String getTipo();
 
-    // --- GETTERS E SETTERS ---
+    //getters e setters
 
     public long getId() {
         return id;
@@ -70,12 +70,25 @@ public abstract class Usuario {
         return ativo;
     }
 
-    public void setAtivo(boolean ativo) {
-        this.ativo = ativo;
+    public void ativarUsuario(){
+        this.ativo = true;
     }
 
-    @Override
-    public String toString() {
-        return "ID: " + id + " | Nome: " + nome + " | Matrícula: " + matricula + " | Tipo: " + getTipo();
+    public void inativarUsuario(){
+        this.ativo = false;
     }
+
+    //toString básico p/debug
+    @Override
+    public String toString(){
+        String status;
+        if(ativo){
+            status = "Usuário ativo";
+        } else {
+            status = "Usuario inativado";
+        }
+        return "ID: " + id + " | Nome: " + nome + " | Matrícula: " + matricula + " | Tipo: " + getTipo() + " | Status: " + status;
+
+    }
+
 }

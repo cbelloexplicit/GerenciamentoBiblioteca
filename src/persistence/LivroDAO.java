@@ -1,35 +1,32 @@
 package persistence;
 
-import model.Genero;
-import model.Livro;
+import model.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
-public class LivrosDAO {
-
+public class LivroDAO {
     private static List<Livro> bancoLivros = new ArrayList<>();
     private static long proximoId = 1;
 
-    // --- SEED INICIAL (Livros de Teste) ---
+    // --- Livros de Teste ---
     static {
         // Precisamos buscar os Gêneros para associar aos livros
-        GenerosDAO generoDAO = new GenerosDAO();
+        GeneroDAO generoDAO = new GeneroDAO();
 
-        // Recuperando gêneros pelo ID (assumindo que 1=Ficção, 2=Romance, etc. do passo anterior)
+        // Recuperando gêneros pelo ID (assumindo que 1=Ficção, 2=Romance, 3=terror)
         Genero ficcao = generoDAO.buscarPorId(1);
         Genero romance = generoDAO.buscarPorId(2);
-        Genero didatico = generoDAO.buscarPorId(4);
+        Genero terror = generoDAO.buscarPorId(3);
 
-        // Criando livros apenas se os gêneros existirem (segurança)
+        // Criando livros apenas se os gêneros existirem
         if (ficcao != null) {
             salvarFake(new Livro("Duna", "Frank Herbert", ficcao, 14, 5));
         }
         if (romance != null) {
             salvarFake(new Livro("Dom Casmurro", "Machado de Assis", romance, 12, 3));
         }
-        if (didatico != null) {
-            salvarFake(new Livro("Matemática 1", "Giovanni Jr", didatico, 10, 10));
+        if (terror != null) {
+            salvarFake(new Livro("IT: A Coisa", "Stephen King", terror, 17, 1));
         }
     }
 
@@ -37,11 +34,10 @@ public class LivrosDAO {
         l.setId(proximoId++);
         bancoLivros.add(l);
     }
+    // CRUD
 
-    // --- MÉTODOS CRUD ---
-
-    public void salvar(Livro livro) {
-        if (livro.getId() == 0) {
+    public void salvar(Livro livro){
+        if(livro.getId() == 0){
             livro.setId(proximoId++);
         }
         bancoLivros.add(livro);
@@ -54,18 +50,15 @@ public class LivrosDAO {
 
     public Livro buscarPorId(long id) {
         for (Livro l : bancoLivros) {
-            if (l.getId() == id) return l;
+            if (l.getId() == id)
+                return l;
         }
         return null;
     }
-
-    public void remover(long id) {
+    public void remover(long id){
         bancoLivros.removeIf(l -> l.getId() == id);
     }
-
-    // --- MÉTODOS DE BUSCA ESPECÍFICOS (Requisitos do Trabalho) ---
-
-    // Busca aproximada (ex: pesquisar "Harry" acha "Harry Potter")
+    //busca especifica
     public List<Livro> buscarPorTitulo(String termo) {
         List<Livro> resultado = new ArrayList<>();
         for (Livro l : bancoLivros) {
@@ -90,7 +83,7 @@ public class LivrosDAO {
     public List<Livro> buscarPorGenero(Genero genero) {
         List<Livro> resultado = new ArrayList<>();
         for (Livro l : bancoLivros) {
-            if (l.getGenero().getId() == genero.getId()) {
+            if (l.getGenero().getID() == genero.getID()) {
                 resultado.add(l);
             }
         }
