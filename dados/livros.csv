@@ -1,6 +1,5 @@
 101;Duna;Frank Herbert;1;14;5;5
 102;Neuromancer;William Gibson;1;16;3;3
-103;Jogos Vorazes;Suzanne Collins;1;12;8;8
 104;Eu, Robô;Isaac Asimov;1;12;4;4
 105;Dom Casmurro;Machado de Assis;2;12;15;15
 106;Memórias Póstumas de Brás Cubas;Machado de Assis;2;14;10;10
@@ -10,14 +9,9 @@
 110;It: A Coisa;Stephen King;3;16;2;2
 111;O Iluminado;Stephen King;3;16;2;2
 112;Drácula;Bram Stoker;3;14;4;4
-113;Matemática: Volume Único;Gelson Iezzi;4;14;25;25
 114;Biologia: A Vida;Sônia Lopes;4;14;15;15
 115;História do Brasil;Boris Fausto;4;12;15;15
-116;Harry Potter e a Pedra Filosofal;J.K. Rowling;5;10;12;12
-117;Harry Potter e a Câmara Secreta;J.K. Rowling;5;10;10;10
 118;O Senhor dos Anéis: A Sociedade do Anel;J.R.R. Tolkien;5;12;5;5
-119;Percy Jackson: O Ladrão de Raios;Rick Riordan;5;10;8;8
-120;O Hobbit;J.R.R. Tolkien;5;10;6;6
 121;Um Estudo em Vermelho;Arthur Conan Doyle;6;12;5;5
 122;Assassinato no Expresso do Oriente;Agatha Christie;6;12;7;7
 123;O Cão dos Baskerville;Arthur Conan Doyle;6;12;4;4
@@ -50,4 +44,9 @@
 150;Código Limpo;Robert C. Martin;18;16;2;2
 151;Entendendo Algoritmos;Aditya Bhargava;18;14;3;3
 152;História da Arte;Gombrich;19;14;1;1
-153;Sal, Gordura, Acidez, Calor;Samin Nosrat;20;12;2;2
+119;Percy Jackson: O Ladrão de Raios;Rick Riordan;5;10;8;8
+113;Matemática: Volume Único;Gelson Iezzi;4;14;25;25
+117;Harry Potter e a Câmara Secreta;J.K. Rowling;5;10;10;10
+120;O Hobbit;J.R.R. Tolkien;5;10;6;6
+116;Harry Potter e a Pedra Filosofal;J.K. Rowling;5;10;12;12
+103;Jogos Vorazes;Suzanne Collins;1;12;8;8

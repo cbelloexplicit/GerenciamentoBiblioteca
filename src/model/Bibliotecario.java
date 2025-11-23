@@ -10,6 +10,7 @@ public class Bibliotecario extends Usuario{
     public Bibliotecario(String nome, String matricula, String senha) {
         super(nome, matricula, senha);
     }
+    @Override
     public String getTipo(){
         return "BIBLIOTECÁRIO";
     }

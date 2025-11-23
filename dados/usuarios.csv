@@ -1,5 +1,5 @@
 1;ADMINISTRADOR;Diretora Ana;admin;123;true; ;null
-2;BIBLIOTECARIO;João da Silva;biblio;123;true; ;null
+2;BIBLIOTECÁRIO;João da Silva;biblio;123;true; ;null
 3;PROFESSOR;Prof. Carlos Drumond;prof1;123;true; ;null
 4;PROFESSOR;Profa. Cecília Meireles;prof2;123;true; ;null
 5;ALUNO;Miguel Oliveira;202401;123;true;3º Ano A;2008-03-15
@@ -37,3 +37,4 @@
 37;ALUNO;Antonella Ramos;202433;123;true;2º Ano A;2009-05-12
 38;ALUNO;Maitê Nogueira;202434;123;true;2º Ano A;null
 39;ALUNO;Isabella Mendes;Isabella;senha123;true;2º Ano A;2013-10-10
+40;ALUNO;alunoTeste;aluno;123;true;2º Ano A;2020-05-10

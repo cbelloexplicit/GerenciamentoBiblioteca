@@ -10,6 +10,8 @@ public class Professor extends Usuario{
     public Professor(String nome, String matricula, String senha) {
         super(nome, matricula, senha);
     }
+
+    @Override
     public String getTipo(){
         return "PROFESSOR";
     }

@@ -112,22 +112,27 @@ public class UsuarioDAO {
         for (Usuario u : bancoUsuarios) {
             StringBuilder sb = new StringBuilder();
 
-            // Dados Comuns a todos
+            // 1. Garante que o tipo não é nulo
+            String tipo = u.getTipo();
+            if (tipo == null) tipo = "DESCONHECIDO";
+
+            // 2. Monta os dados comuns
+            // Layout: id;tipo;nome;matricula;senha;ativo
             sb.append(u.getId()).append(";")
-                    .append(u.getTipo()).append(";")
+                    .append(tipo.toUpperCase()).append(";") // Força maiúsculo
                     .append(u.getNome()).append(";")
                     .append(u.getMatricula()).append(";")
                     .append(u.getSenha()).append(";")
                     .append(u.isAtivo());
 
-            // Dados Específicos
+            // 3. Monta os dados extras (Polimorfismo)
             if (u instanceof Aluno) {
                 Aluno a = (Aluno) u;
-                // Extra 1: Turma
                 sb.append(";").append(a.getTurma() == null ? "" : a.getTurma());
-                // Extra 2: Data Nascimento
                 sb.append(";").append(a.getDataNascimento() == null ? "null" : a.getDataNascimento().toString());
             }
+            // IMPORTANTE: O 'else' abaixo garante que Admin/Prof/Biblio
+            // tenham as colunas extras vazias para não quebrar o CSV
             else {
                 sb.append("; ;null");
             }

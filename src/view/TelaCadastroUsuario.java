@@ -203,7 +203,6 @@ public class TelaCadastroUsuario extends JFrame {
 
             switch (tipo) {
                 case "ALUNO":
-                    // Pega a Turma do COMBOBOX
                     Turma turmaSelecionada = (Turma) cmbTurma.getSelectedItem();
                     if (turmaSelecionada == null) throw new ValidacaoException("Selecione uma turma.");
 
@@ -226,11 +225,11 @@ public class TelaCadastroUsuario extends JFrame {
                     break;
 
                 case "PROFESSOR":
-                    Professor prof = new Professor(nome, matricula, senha);
-                    novoUsuario = prof;
+                    novoUsuario = new Professor(nome, matricula, senha);
                     break;
 
                 case "BIBLIOTECARIO":
+                case "BIBLIOTECÁRIO":
                     novoUsuario = new Bibliotecario(nome, matricula, senha);
                     break;
 
