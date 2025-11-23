@@ -1,6 +1,8 @@
 package persistence;
 
 import model.*;
+
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,7 +16,7 @@ public class UsuarioDAO {
         criarUsuarioFake(new Administrador("Admin Principal", "admin", "123"));
         criarUsuarioFake(new Bibliotecario("Ana Biblio", "biblio", "123"));
         criarUsuarioFake(new Professor("Prof. Carlos", "prof", "123"));
-        criarUsuarioFake(new Aluno("João Aluno", "aluno", "123", "3A", "05/06/2007"));
+        criarUsuarioFake(new Aluno("João Aluno", "aluno", "123", "3A", LocalDate.of(2010, 5, 20)));
     }
     private static void criarUsuarioFake(Usuario u) {
         u.setId(proximoId++);

@@ -109,6 +109,13 @@ public class ProgramaLeitura {
         this.ano = ano;
     }
 
+    public boolean isAtivo() {
+        LocalDate hoje = LocalDate.now();
+        // Retorna TRUE se hoje NÃO for depois da data fim.
+        // Ou seja: Hoje <= DataFim
+        return !hoje.isAfter(this.dataFim);
+    }
+
     @Override
     public String toString() {
         return "ProgramaLeitura{" +
