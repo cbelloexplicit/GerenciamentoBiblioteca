@@ -8,15 +8,18 @@ import Service.TurmaService;
 import Service.UsuarioService;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.time.LocalDate;
 import java.util.List;
 
 public class TelaCadastroTurma extends JFrame {
 
+    // Componentes
     private JTextField txtNome;
     private JSpinner spnAno;
-    private JComboBox<Professor> cmbProfessor; // Lista suspensa de professores
+    private JComboBox<Professor> cmbProfessor;
+
     private JButton btnSalvar;
     private JButton btnCancelar;
 
@@ -29,84 +32,130 @@ public class TelaCadastroTurma extends JFrame {
 
         configurarJanela();
         inicializarComponentes();
-        carregarProfessores(); // Popula o ComboBox
+        carregarProfessores(); // Carrega a lista
     }
 
     private void configurarJanela() {
         setTitle("Cadastro de Turma");
-        setSize(450, 250);
+        // Tamanho fixo e confortável para não ficar gigante nem minuscula
+        setSize(450, 350);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setLocationRelativeTo(null);
-        setLayout(new GridBagLayout());
+        setLocationRelativeTo(null); // Centraliza
+        setResizable(false); // Impede que o usuário quebre o layout esticando
+
+        getContentPane().setBackground(new Color(60, 60, 60));
+        setLayout(new BorderLayout());
     }
 
     private void inicializarComponentes() {
+        // --- 1. TÍTULO (Topo) ---
+        JLabel lblTitulo = new JLabel("Nova Turma", SwingConstants.CENTER);
+        lblTitulo.setFont(new Font("Arial", Font.BOLD, 18));
+        lblTitulo.setBorder(new EmptyBorder(15, 0, 15, 0));
+        add(lblTitulo, BorderLayout.NORTH);
+
+        // --- 2. FORMULÁRIO (Centro) ---
+        JPanel painelForm = new JPanel(new GridBagLayout());
+        painelForm.setBackground(new Color(78, 77, 77));
+        // Cria uma "caixa" com borda ao redor dos campos
+        painelForm.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(Color.LIGHT_GRAY),
+                new EmptyBorder(20, 20, 20, 20)
+        ));
+
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(8, 8, 8, 8);
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.anchor = GridBagConstraints.WEST;
+        gbc.insets = new Insets(10, 5, 10, 5); // Espaçamento entre campos
+        gbc.anchor = GridBagConstraints.WEST;   // Alinha à esquerda
+        gbc.fill = GridBagConstraints.HORIZONTAL; // Estica a caixa de texto
 
-        // --- 1. Nome da Turma ---
+        // -- Campo: Nome --
         gbc.gridx = 0; gbc.gridy = 0;
-        add(new JLabel("Nome da Turma (ex: 3º A):"), gbc);
+        gbc.weightx = 0; // Label não estica
+        JLabel lblNome = new JLabel("Nome (ex: 3º A):");
+        lblNome.setFont(new Font("Arial", Font.BOLD, 12));
+        painelForm.add(lblNome, gbc);
 
-        txtNome = new JTextField(20);
-        gbc.gridx = 1;
-        add(txtNome, gbc);
+        gbc.gridx = 1; gbc.gridy = 0;
+        gbc.weightx = 1.0; // Campo estica
+        txtNome = new JTextField();
+        painelForm.add(txtNome, gbc);
 
-        // --- 2. Ano Letivo ---
+        // -- Campo: Ano Letivo --
         gbc.gridx = 0; gbc.gridy = 1;
-        add(new JLabel("Ano Letivo:"), gbc);
+        gbc.weightx = 0;
+        JLabel lblAno = new JLabel("Ano Letivo:");
+        lblAno.setFont(new Font("Arial", Font.BOLD, 12));
+        painelForm.add(lblAno, gbc);
 
-        // Spinner configurado para o ano atual
+        // Configura Spinner para Ano (sem vírgula)
         int anoAtual = LocalDate.now().getYear();
         spnAno = new JSpinner(new SpinnerNumberModel(anoAtual, 2000, 2100, 1));
-        // Remove a formatação de milhar (ex: 2.025 vira 2025)
         JSpinner.NumberEditor editor = new JSpinner.NumberEditor(spnAno, "#");
         spnAno.setEditor(editor);
 
-        gbc.gridx = 1;
-        add(spnAno, gbc);
+        gbc.gridx = 1; gbc.gridy = 1;
+        gbc.weightx = 1.0;
+        painelForm.add(spnAno, gbc);
 
-        // --- 3. Professor Responsável ---
+        // -- Campo: Professor --
         gbc.gridx = 0; gbc.gridy = 2;
-        add(new JLabel("Professor Responsável:"), gbc);
+        gbc.weightx = 0;
+        JLabel lblProf = new JLabel("Professor Resp.:");
+        lblProf.setFont(new Font("Arial", Font.BOLD, 12));
+        painelForm.add(lblProf, gbc);
 
         cmbProfessor = new JComboBox<>();
-        gbc.gridx = 1;
-        add(cmbProfessor, gbc);
+        gbc.gridx = 1; gbc.gridy = 2;
+        gbc.weightx = 1.0;
+        painelForm.add(cmbProfessor, gbc);
 
-        // --- Botões ---
-        JPanel painelBotoes = new JPanel();
-        btnSalvar = new JButton("Salvar Turma");
-        btnSalvar.setBackground(new Color(100, 200, 100));
+        // Adiciona o painel de formulário no centro da janela, com margens
+        JPanel containerCentro = new JPanel(new BorderLayout());
+        containerCentro.add(painelForm);
+        containerCentro.setBorder(new EmptyBorder(0, 20, 0, 20)); // Margens laterais na janela
+        containerCentro.setBackground(new Color(78, 77, 77)); // Cor de fundo igual à janela
+
+        add(containerCentro, BorderLayout.CENTER);
+
+        // --- 3. BOTÕES (Rodapé) ---
+        JPanel painelBotoes = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        painelBotoes.setBackground(new Color(78, 77, 77));
+        painelBotoes.setBorder(new EmptyBorder(10, 20, 10, 20));
 
         btnCancelar = new JButton("Cancelar");
 
-        painelBotoes.add(btnSalvar);
+        btnSalvar = new JButton("Salvar Turma");
+        btnSalvar.setBackground(new Color(100, 200, 100)); // Verde
+        btnSalvar.setForeground(Color.WHITE);
+        btnSalvar.setFont(new Font("Arial", Font.BOLD, 12));
+
         painelBotoes.add(btnCancelar);
+        painelBotoes.add(btnSalvar);
 
-        gbc.gridx = 0; gbc.gridy = 3;
-        gbc.gridwidth = 2;
-        gbc.anchor = GridBagConstraints.CENTER;
-        add(painelBotoes, gbc);
+        add(painelBotoes, BorderLayout.SOUTH);
 
-        // --- Eventos ---
+        // --- EVENTOS ---
         btnSalvar.addActionListener(e -> salvarTurma());
         btnCancelar.addActionListener(e -> dispose());
     }
 
     private void carregarProfessores() {
+        cmbProfessor.removeAllItems();
         List<Usuario> todosUsuarios = usuarioService.listarTodos();
 
+        boolean temProfessor = false;
         for (Usuario u : todosUsuarios) {
+            // Filtra apenas quem é PROFESSOR
             if (u instanceof Professor) {
                 cmbProfessor.addItem((Professor) u);
+                temProfessor = true;
             }
         }
 
-        if (cmbProfessor.getItemCount() == 0) {
-            JOptionPane.showMessageDialog(this, "Atenção: Nenhum professor cadastrado no sistema!");
+        if (!temProfessor) {
+            // Adiciona um item fake só para não quebrar o layout visualmente
+            cmbProfessor.addItem(null);
+            JOptionPane.showMessageDialog(this, "Aviso: Nenhum professor cadastrado.\nVocê precisa cadastrar um usuário do tipo 'Professor' antes.");
         }
     }
 
@@ -117,17 +166,16 @@ public class TelaCadastroTurma extends JFrame {
             Professor profSelecionado = (Professor) cmbProfessor.getSelectedItem();
 
             if (profSelecionado == null) {
-                throw new ValidacaoException("Selecione um professor.");
+                throw new ValidacaoException("É obrigatório selecionar um Professor.");
             }
 
-            // Cria o objeto Turma (ID 0 pois é novo)
+            // ID 0 = Nova Turma
             Turma novaTurma = new Turma(0, nome, ano, profSelecionado);
 
-            // Service valida e salva
             turmaService.salvar(novaTurma);
 
-            JOptionPane.showMessageDialog(this, "Turma '" + nome + "' cadastrada com sucesso!");
-            dispose();
+            JOptionPane.showMessageDialog(this, "Turma '" + nome + "' salva com sucesso!");
+            dispose(); // Fecha a janela
 
         } catch (ValidacaoException ex) {
             JOptionPane.showMessageDialog(this, ex.getMessage(), "Erro de Validação", JOptionPane.WARNING_MESSAGE);

@@ -15,10 +15,14 @@ public class ProgramaLeituraService {
     private LivroDAO livroDAO;
     private TurmaDAO turmaDAO; // garantir que a turma existe e tem alunos
     private ProgramaLeituraDAO programaDAO;
+    private LogService logService;
 
     public ProgramaLeituraService() {
         this.livroDAO = new LivroDAO();
         this.turmaDAO = new TurmaDAO();
+        this.programaDAO = new ProgramaLeituraDAO();
+        this.logService = new LogService();
+
     }
 
     //GERAR SUGESTÃO AUTOMÁTICA DE DISTRIBUIÇÃO
@@ -125,10 +129,12 @@ public class ProgramaLeituraService {
         }
 
         //Salvar o Programa
+        boolean novo = (programa.getId() == 0);
         programaDAO.salvar(programa);
+
+        // --- LOG AQUI ---
+        logService.registrar("GERAR PROGRAMA NOVO" + ": " + programa.getTitulo() + " | " + programa.getTurma().getNome());
         System.out.println("SUCESSO: Programa '" + programa.getTitulo() + "' salvo com " + programa.getAtribuicoes().size() + " atribuições.");
 
-        //Salvar linha no programas.csv
-        //Salvar N linhas no programa_detalhes.csv
     }
 }

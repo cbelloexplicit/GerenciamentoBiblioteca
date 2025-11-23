@@ -9,12 +9,14 @@ import java.util.List;
 public class GeneroService {
 
     private GeneroDAO generoDAO;
-    // Precisamos do LivroDAO para verificar se o gênero está em uso antes de apagar
+    private LogService logService;
     private LivroDAO livroDAO;
 
     public GeneroService() {
         this.generoDAO = new GeneroDAO();
         this.livroDAO = new LivroDAO();
+        this.logService = new LogService();
+
     }
 
     //SALVAR GÊNERO
@@ -30,8 +32,12 @@ public class GeneroService {
         if (genero.getID() == 0 && generoDAO.existePorNome(genero.getNome())) {
             throw new ValidacaoException("Já existe um gênero cadastrado com este nome.");
         }
-
+        boolean novo = (genero.getID() == 0);
         generoDAO.salvar(genero);
+
+        // --- LOG AQUI ---
+        String acao = novo ? "CADASTRAR GENERO" : "EDITAR GENERO";
+        logService.registrar(acao + ": " + genero.getNome());
     }
 
     //REMOVER GÊNERO
@@ -52,7 +58,8 @@ public class GeneroService {
                             "' pois existem " + livrosDoGenero.size() + " livros associados a ele no acervo."
             );
         }
-
+        Genero l = generoDAO.buscarPorId(id); // Pega o nome antes de apagar
+        logService.registrar("EXCLUIR GENERO: " + (l != null ? l.getNome() : id));
         // Se ninguém usa, pode apagar
         generoDAO.remover(id);
     }

@@ -4,186 +4,219 @@ import model.Usuario;
 import Service.LoginService;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 public class MenuPrincipal extends JFrame {
 
     private Usuario usuarioLogado;
 
-    // Componentes do Menu
-    private JMenuBar barraMenu;
+    // Componentes (Agora são Botões, não MenuItems)
+    private JButton btnCadUsuario;
+    private JButton btnCadLivro;
+    private JButton btnCadGenero;
+    private JButton btnCadTurma;
 
-    // Menus Principais (JMenu)
-    private JMenu menuArquivo;
-    private JMenu menuCadastros;
-    private JMenu menuCirculacao;
-    private JMenu menuAcademico;
-    private JMenu menuAjuda;
+    private JButton btnEmprestimo;
+    private JButton btnDevolucao;
 
-    // Itens de Menu
-    private JMenuItem itemSair;
-    private JMenuItem itemLogout;
+    private JButton btnProgramaLeitura;
+    private JButton btnMinhasTurmas;
+    private JButton btnMeuPainelAluno; // Novo para o aluno
+    private JButton btnRelatorioLogs;
+    private JButton btnPesquisaPublica;
+    private JButton btnLogout;
 
-    // Cadastros
-    private JMenuItem itemCadUsuario;
-    private JMenuItem itemCadLivro;
-    private JMenuItem itemCadGenero;
-    private JMenuItem itemCadTurma;
-
-    // Circulação
-    private JMenuItem itemEmprestimo;
-    private JMenuItem itemDevolucao;
-
-    // Acadêmico
-    private JMenuItem itemProgramaLeitura;
-    private JMenuItem itemMinhasTurmas;
+    // Painel que agrupa os botões
+    private JPanel painelGrid;
 
     public MenuPrincipal(Usuario usuario) {
         this.usuarioLogado = usuario;
-        initComponents();      // Inicia o visual
-        configurarPermissoes(); // Aplica a lógica de quem pode ver o quê
+        configurarJanela();
+        inicializarComponentes();
+        aplicarPermissoes();
     }
 
-    private void initComponents() {
-        // Configuração da Janela
-        setTitle("SGBE - Biblioteca Escolar | Usuário: " + usuarioLogado.getNome());
-        setSize(800, 600);
+    private void configurarJanela() {
+        setTitle("SGBE - Menu Principal | Olá, " + usuarioLogado.getNome());
+        setSize(900, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
+        // Layout principal centralizado
+        setLayout(new GridBagLayout());
+    }
 
-        // Cria a Barra de Menu
-        barraMenu = new JMenuBar();
+    private void inicializarComponentes() {
+        GridBagConstraints gbc = new GridBagConstraints();
 
-        // --- 1. Menu Arquivo ---
-        menuArquivo = new JMenu("Arquivo");
-        itemLogout = new JMenuItem("Fazer Logout");
-        itemSair = new JMenuItem("Sair do Sistema");
-        menuArquivo.add(itemLogout);
-        menuArquivo.addSeparator();
-        menuArquivo.add(itemSair);
+        // --- 1. Cabeçalho (Título) ---
+        JLabel lblTitulo = new JLabel("Sistema de Biblioteca Escolar");
+        lblTitulo.setFont(new Font("Arial", Font.BOLD, 28));
+        lblTitulo.setForeground(new Color(220, 220, 220));
 
-        // --- 2. Menu Cadastros (Admin/Bibliotecário) ---
-        menuCadastros = new JMenu("Cadastros"); //
-        itemCadUsuario = new JMenuItem("Usuários");
-        itemCadLivro = new JMenuItem("Livros");
-        itemCadGenero = new JMenuItem("Gêneros Literários");
-        itemCadTurma = new JMenuItem("Turmas");
+        gbc.gridx = 0; gbc.gridy = 0;
+        gbc.insets = new Insets(0, 0, 30, 0);
+        add(lblTitulo, gbc);
 
-        menuCadastros.add(itemCadUsuario);
-        menuCadastros.add(itemCadLivro);
-        menuCadastros.add(itemCadGenero);
-        menuCadastros.add(itemCadTurma);
+        // --- 2. Painel de Botões (Grid) ---
+        // GridLayout(0, 3) = Linhas automáticas, 3 Colunas. Gap de 15px.
+        painelGrid = new JPanel(new GridLayout(0, 4, 15, 15));
+        painelGrid.setBorder(new EmptyBorder(20, 20, 20, 20));
 
-        // --- 3. Menu Circulação (Biblioteca) ---
-        menuCirculacao = new JMenu("Circulação");
-        itemEmprestimo = new JMenuItem("Realizar Empréstimo");
-        itemDevolucao = new JMenuItem("Realizar Devolução");
-        menuCirculacao.add(itemEmprestimo);
-        menuCirculacao.add(itemDevolucao);
+        // Inicializa Botões
+        btnCadUsuario = criarBotao("Gerenciar Usuários", new Color(70, 130, 180));
+        btnCadLivro = criarBotao("Gerenciar Acervo", new Color(70, 130, 180));
+        btnCadGenero = criarBotao("Cadastrar Gênero", new Color(100, 149, 237));
+        btnCadTurma = criarBotao("Cadastrar Turma", new Color(100, 149, 237));
 
-        // --- 4. Menu Acadêmico (Professores) ---
-        menuAcademico = new JMenu("Acadêmico");
-        itemProgramaLeitura = new JMenuItem("Programa de Leitura");
-        itemMinhasTurmas = new JMenuItem("Minhas Turmas");
-        menuAcademico.add(itemProgramaLeitura);
-        menuAcademico.add(itemMinhasTurmas);
+        btnEmprestimo = criarBotao("Novo Empréstimo", new Color(60, 179, 113));
+        btnDevolucao = criarBotao("Devolução", new Color(60, 179, 113));
 
-        // Adiciona os menus na barra
-        barraMenu.add(menuArquivo);
-        barraMenu.add(menuCadastros);
-        barraMenu.add(menuCirculacao);
-        barraMenu.add(menuAcademico);
+        btnProgramaLeitura = criarBotao("Planejar Leitura", new Color(218, 165, 32));
+        btnMinhasTurmas = criarBotao("Minhas Turmas", new Color(218, 165, 32));
 
-        // Define a barra de menu deste JFrame
-        setJMenuBar(barraMenu);
+        btnMeuPainelAluno = criarBotao("Meu Painel", new Color(147, 112, 219));
+        btnPesquisaPublica = criarBotao("Pesquisar Livros", new Color(100, 149, 237)); // Azul Cornflower
+        btnMeuPainelAluno = criarBotao("Meu Painel", new Color(147, 112, 219));
+        btnRelatorioLogs = criarBotao("Logs de Acesso", new Color(112, 128, 144));
 
-        // Adiciona um painel de fundo com uma mensagem de boas-vindas
-        JPanel painelFundo = new JPanel(new GridBagLayout());
-        JLabel labelBemVindo = new JLabel("Bem-vindo ao Sistema SGBE");
-        labelBemVindo.setFont(new Font("Arial", Font.BOLD, 24));
-        painelFundo.add(labelBemVindo);
-        add(painelFundo);
+        painelGrid.add(btnCadUsuario);
+        painelGrid.add(btnCadLivro);
+        painelGrid.add(btnCadGenero);
+        painelGrid.add(btnCadTurma);
+        painelGrid.add(btnEmprestimo);
+        painelGrid.add(btnDevolucao);
+        painelGrid.add(btnProgramaLeitura);
+        painelGrid.add(btnMinhasTurmas);
+        painelGrid.add(btnMeuPainelAluno);
+        painelGrid.add(btnCadUsuario);
+        painelGrid.add(btnRelatorioLogs);
+        painelGrid.add(btnPesquisaPublica);
 
-        // --- CONFIGURAÇÃO DOS EVENTOS ---
+        gbc.gridy = 1;
+        gbc.insets = new Insets(0, 0, 0, 0);
+        add(painelGrid, gbc);
+
+        // --- 3. Botão Sair (Rodapé) ---
+        btnLogout = new JButton("Sair do Sistema");
+        btnLogout.setBackground(new Color(200, 80, 80));
+        btnLogout.setForeground(Color.WHITE);
+        btnLogout.setFocusPainted(false);
+        btnLogout.setPreferredSize(new Dimension(150, 40));
+
+        gbc.gridy = 2;
+        gbc.insets = new Insets(40, 0, 0, 0); // Margem acima do botão sair
+        add(btnLogout, gbc);
+
+        // --- Configurar Ações ---
         configurarAcoes();
     }
 
-    private void configurarPermissoes() {
-        String tipo = usuarioLogado.getTipo();
+    private JButton criarBotao(String texto, Color corFundo) {
+        JButton btn = new JButton(texto);
+        btn.setPreferredSize(new Dimension(180, 100)); // Botões grandes
+        btn.setBackground(corFundo);
+        btn.setForeground(Color.WHITE);
+        btn.setFont(new Font("Arial", Font.BOLD, 14));
+        btn.setFocusPainted(false);
+        btn.setBorder(BorderFactory.createRaisedBevelBorder());
+        return btn;
+    }
 
-        if (tipo.equals("ALUNO")) {
-            // Aluno vê quase nada, apenas consultas
-            menuCadastros.setVisible(false);
-            menuCirculacao.setVisible(false);
-            menuAcademico.setVisible(false);
-        } else if (tipo.equals("PROFESSOR")) {
-            // Professor vê Acadêmico, mas não cadastra usuários/livros
-            menuCadastros.setVisible(false);
-            menuCirculacao.setVisible(false);
-            menuAcademico.setVisible(true);
-        } else if (tipo.equals("BIBLIOTECARIO")) {
-            // Bibliotecário vê Cadastros de Livros e Circulação, mas não Turmas/Usuários
-            itemCadUsuario.setEnabled(false);
-            itemCadTurma.setEnabled(false);
-            menuAcademico.setVisible(false);
+    private void aplicarPermissoes() {
+        if (usuarioLogado == null) return;
+
+        String tipo = usuarioLogado.getTipo().trim().toUpperCase();
+
+        // DEBUG
+        System.out.println("--- MENU PRINCIPAL ---");
+        System.out.println("Usuário Logado: " + usuarioLogado.getNome());
+        System.out.println("Tipo detectado (Processado): [" + tipo + "]");
+        System.out.println("----------------------");
+
+        esconderTodosBotoes();
+
+        if (btnPesquisaPublica != null) btnPesquisaPublica.setVisible(true);
+        btnLogout.setVisible(true);
+
+        switch (tipo) {
+            case "ADMINISTRADOR":
+            case "ADMIN":
+                btnCadUsuario.setVisible(true);
+                btnCadLivro.setVisible(true);
+                btnCadGenero.setVisible(true);
+                btnCadTurma.setVisible(true);
+                btnEmprestimo.setVisible(true);
+                btnDevolucao.setVisible(true);
+                if(btnRelatorioLogs != null) btnRelatorioLogs.setVisible(true);
+                if(btnPesquisaPublica != null) btnPesquisaPublica.setVisible(true);
+                break;
+
+            case "BIBLIOTECARIO":
+            case "BIBLIOTECÁRIO":
+                btnCadLivro.setVisible(true);
+                btnCadGenero.setVisible(true);
+                btnEmprestimo.setVisible(true);
+                btnDevolucao.setVisible(true);
+                break;
+
+            case "PROFESSOR":
+                btnProgramaLeitura.setVisible(true);
+                btnMinhasTurmas.setVisible(true);
+                if(btnPesquisaPublica != null) btnPesquisaPublica.setVisible(true);
+                break;
+
+            case "ALUNO":
+                btnMeuPainelAluno.setVisible(true);
+                break;
+
+            default:
+                System.out.println("ERRO VISUAL: Tipo de usuário [" + tipo + "] não tem permissões configuradas no switch.");
+                JOptionPane.showMessageDialog(this, "Seu perfil de usuário (" + tipo + ") não possui botões configurados.");
+                break;
         }
-        // ADMINISTRADOR vê tudo (nenhuma restrição aplicada)
+    }
+
+    private void esconderTodosBotoes() {
+        btnCadUsuario.setVisible(false);
+        btnCadLivro.setVisible(false);
+        btnCadGenero.setVisible(false);
+        btnCadTurma.setVisible(false);
+        btnEmprestimo.setVisible(false);
+        btnDevolucao.setVisible(false);
+        btnProgramaLeitura.setVisible(false);
+        btnMinhasTurmas.setVisible(false);
+        btnMeuPainelAluno.setVisible(false);
+        btnRelatorioLogs.setVisible(false);
+        btnPesquisaPublica.setVisible(false);
+
     }
 
     private void configurarAcoes() {
-        // Ação de Sair
-        itemSair.addActionListener(e -> System.exit(0));
+        // ADMIN / CADASTROS
+        btnCadUsuario.addActionListener(e -> new TelaGerenciarUsuarios().setVisible(true));
+        btnCadLivro.addActionListener(e -> new TelaGerenciarAcervo().setVisible(true));
+        btnCadGenero.addActionListener(e -> new TelaGerenciarGeneros().setVisible(true));
+        btnCadTurma.addActionListener(e -> new TelaCadastroTurma().setVisible(true));
+        btnRelatorioLogs.addActionListener(e -> new TelaRelatorioLogs().setVisible(true));
 
-        // Ação de Logout
-        itemLogout.addActionListener(e -> {
-            LoginService service = new LoginService();
-            service.realizarLogout(usuarioLogado);
-            this.dispose(); // Fecha menu
-            new TelaLogin().setVisible(true); // Reabre login
-        });
+        // BIBLIOTECA
+        btnEmprestimo.addActionListener(e -> new TelaRealizarEmprestimo().setVisible(true));
+        btnDevolucao.addActionListener(e -> new TelaDevolucao().setVisible(true));
 
-        // Ação Cadastro de Livro
-        itemCadLivro.addActionListener(e -> {
-            TelaCadastroLivro telaL = new TelaCadastroLivro();
-            telaL.setVisible(true);
-        });
+        // PROFESSOR
+        btnProgramaLeitura.addActionListener(e -> new TelaProgramaLeitura().setVisible(true));
+        btnMinhasTurmas.addActionListener(e -> new TelaMinhasTurmas(usuarioLogado).setVisible(true));
 
-        //itemCadUsuario
-        itemCadUsuario.addActionListener(e -> {
-            new TelaGerenciarUsuarios().setVisible(true);
-        });
-        //itemCadGenero;
-        itemCadGenero.addActionListener(e -> {
-            new TelaCadastroGenero().setVisible(true);
-        });
-        //itemCadTurma;
-        itemCadTurma.addActionListener(e -> {
-            TelaCadastroTurma telaT = new TelaCadastroTurma();
-            telaT.setVisible(true);
-        });
-        // Circulação
-        //itemEmprestimo;
-        itemEmprestimo.addActionListener(e -> {
-            TelaRealizarEmprestimo telaE = new TelaRealizarEmprestimo();
-            telaE.setVisible(true);
-        });
-        //itemDevolucao;
-        itemDevolucao.addActionListener(e -> {
-            TelaDevolucao telaD = new TelaDevolucao();
-            telaD.setVisible(true);
-        });
-        // Acadêmico
-        //itemProgramaLeitura;
-        itemProgramaLeitura.addActionListener(e -> {
-            TelaProgramaLeitura telaP = new TelaProgramaLeitura();
-            telaP.setVisible(true);
-        });
-        //itemMinhasTurmas;
-        itemEmprestimo.addActionListener(e -> {
-            TelaRealizarEmprestimo telaE = new TelaRealizarEmprestimo();
-            telaE.setVisible(true);
+
+        // ALUNO
+        btnMeuPainelAluno.addActionListener(e -> new TelaConsultaAluno(usuarioLogado).setVisible(true));
+        btnPesquisaPublica.addActionListener(e -> new TelaPesquisaLivro().setVisible(true));
+        // SAIR
+        btnLogout.addActionListener(e -> {
+            new LoginService().realizarLogout(usuarioLogado);
+            dispose();
+            new TelaLogin().setVisible(true);
         });
     }
 }

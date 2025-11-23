@@ -3,6 +3,7 @@ package Service;
 import persistence.UsuarioDAO;
 import model.Usuario;
 import Exception.AutenticacaoException;
+import util.Sessao;
 
 public class LoginService {
     private UsuarioDAO usuarioDAO;
@@ -35,20 +36,21 @@ public class LoginService {
         if (!usuario.isAtivo()) {
             throw new AutenticacaoException("Acesso negado. Usuário desativado.");
         }
-        //5. sucessso -> registra log
-        try {
-            LogService.registrarAtividade(usuario, "LOGIN");
-        } catch (Exception e) {
-            System.out.println("Erro ao gravar log: " + e.getMessage());
-        }
+        // 1. Guarda na Sessão Global
+        Sessao.setUsuarioLogado(usuario);
+
+        // 2. Registra o Log
+        LogService.registrarAtividade(usuario, "LOGIN");
+
         return usuario;
     }
     //logout
     public void realizarLogout(Usuario usuario) {
         if (usuario != null) {
             LogService.registrarAtividade(usuario, "LOGOUT");
-            System.out.println("Logout realizado para: " + usuario.getNome());
         }
+        // Limpa a sessão ao sair
+        Sessao.setUsuarioLogado(null);
     }
 }
 

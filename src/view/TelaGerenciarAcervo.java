@@ -23,7 +23,6 @@ public class TelaGerenciarAcervo extends JFrame {
     private JButton btnEditar;
     private JButton btnExcluir;
     private JButton btnAtualizar; // Para recarregar a lista
-
     private LivroService livroService;
 
     public TelaGerenciarAcervo() {

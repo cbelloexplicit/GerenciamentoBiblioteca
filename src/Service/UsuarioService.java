@@ -12,9 +12,12 @@ import java.util.List;
 public class UsuarioService {
 
     private UsuarioDAO usuarioDAO;
+    private LogService logService;
 
     public UsuarioService() {
         this.usuarioDAO = new UsuarioDAO();
+        this.logService = new LogService();
+
     }
     //SALVAR OU ATUALIZAR USUÁRIO
     public void salvar(Usuario usuario) throws ValidacaoException {
@@ -48,9 +51,12 @@ public class UsuarioService {
             if (aluno.getDataNascimento().isAfter(LocalDate.now())) {
                 throw new ValidacaoException("A data de nascimento não pode ser no futuro.");
             }
-
-            // 3. Persistência
+            boolean novo = (usuario.getId() == 0);
             usuarioDAO.salvar(usuario);
+
+            String acao = novo ? "CADASTRAR USUARIO" : "EDITAR USUARIO";
+            logService.registrar(acao + ": " + usuario.getNome() + " | " + usuario.getTipo());
+
         }
     }
 
@@ -70,8 +76,11 @@ public class UsuarioService {
                 throw new ValidacaoException("Não é possível excluir o único Administrador do sistema.");
             }
         }
-
+        Usuario l = usuarioDAO.buscarPorId(id); // Pega o nome antes de apagar
         usuarioDAO.remover(id);
+
+        // --- LOG AQUI ---
+        logService.registrar("EXCLUIR USUARIO: " + (l != null ? l.getNome() : id));
     }
 
      //DESATIVAR USUÁRIO (Alternativa à exclusão)
@@ -99,7 +108,7 @@ public class UsuarioService {
         return usuarioDAO.listarApenasAdmin();
     }
     public List<Usuario> listarApenasProf() {
-        return usuarioDAO.listarApenasProfessores();
+        return usuarioDAO.listarApenasProf();
     }
     public List<Usuario> listarApenasBibliotec() {
         return usuarioDAO.listarApenasBibliotec();

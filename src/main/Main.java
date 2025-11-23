@@ -6,7 +6,6 @@ import javax.swing.*;
 public class Main {
 
     public static void main(String[] args) {
-        // Tenta fazer o Java Swing ficar com a cara do Windows/Mac/Linux
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception e) {
@@ -14,7 +13,6 @@ public class Main {
             System.err.println("Erro ao configurar tema visual: " + e.getMessage());
         }
 
-        // 2. DICAS DE LOGIN NO CONSOLE
         System.out.println("=================================================");
         System.out.println("      SGBE - SISTEMA DE BIBLIOTECA ESCOLAR       ");
         System.out.println("=================================================");
@@ -30,7 +28,11 @@ public class Main {
         System.out.println("   Senha:     123");
         System.out.println("");
         System.out.println("3. ALUNO:");
-        System.out.println("   Matrícula: aluno");
+        System.out.println("   Matrícula: isabella");
+        System.out.println("   Senha:     senha123");
+        System.out.println("");
+        System.out.println("4. BIBLIOTECARIO:");
+        System.out.println("   Matrícula: biblio");
         System.out.println("   Senha:     123");
         System.out.println("=================================================");
 

@@ -10,9 +10,11 @@ import java.util.List;
 public class LivroService {
 
     private LivroDAO livroDAO;
+    private LogService logService;
 
     public LivroService() {
         this.livroDAO = new LivroDAO();
+        this.logService = new LogService();
     }
 
     //salvar ou atualizar
@@ -61,8 +63,12 @@ public class LivroService {
             }
         }
 
-        // Gravação
+        // Gravação e log
+        boolean novo = (livro.getId() == 0);
         livroDAO.salvar(livro);
+        livroDAO.salvar(livro);
+        String acao = novo ? "CADASTRAR LIVRO" : "EDITAR LIVRO";
+        logService.registrar(acao + ": " + livro.getTitulo());
     }
 
     //remover
@@ -77,8 +83,9 @@ public class LivroService {
         if (livro.getCopiasDisponiveis() < livro.getTotalCopias()) {
             throw new ValidacaoException("Não é possível remover o livro pois há exemplares emprestados.");
         }
-
+        Livro l = livroDAO.buscarPorId(id);
         livroDAO.remover(id);
+        logService.registrar("EXCLUIR LIVRO: " + (l != null ? l.getTitulo() : id));
     }
 
     //CONSULTA

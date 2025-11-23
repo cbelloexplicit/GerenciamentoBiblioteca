@@ -3,6 +3,7 @@ package Service;
 import persistence.LogDAO;
 import model.Usuario;
 import model.LogAcesso;
+import util.Sessao;
 
 import java.util.List;
 
@@ -35,5 +36,15 @@ public class LogService {
             return obterRelatorioCompleto();
         }
         return logDAO.buscarPorUsuario(usuario.getId());
+
     }
-}
+    public void registrar(String acao) {
+        if (Sessao.isLogado()) {
+            registrarAtividade(Sessao.getUsuarioLogado(), acao);
+        } else {
+            System.out.println("Tentativa de log sem usuário logado: " + acao);
+        }
+
+
+        }
+    }

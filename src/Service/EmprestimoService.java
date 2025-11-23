@@ -12,13 +12,15 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 public class EmprestimoService {
-
+    private LogService logService;
     private EmprestimoDAO emprestimoDAO;
     private LivroDAO livroDAO;
 
     public EmprestimoService() {
         this.emprestimoDAO = new EmprestimoDAO();
         this.livroDAO = new LivroDAO();
+        this.logService = new LogService();
+
     }
 
     //REGISTRAR EMPRÉSTIMO
@@ -58,6 +60,7 @@ public class EmprestimoService {
         // Atualiza o estoque do livro (Decrementa)
         livroAtualizado.dimCopiasDisponiveis();
         livroDAO.salvar(livroAtualizado);
+        logService.registrar("REALIZAR EMPRÉSTIMO: " + livro.getTitulo() + " para " + aluno.getNome());
 
         System.out.println("Empréstimo realizado: " + aluno.getNome() + " pegou " + livroAtualizado.getTitulo());
     }
@@ -102,7 +105,7 @@ public class EmprestimoService {
 
         //Salva o empréstimo fechado
         emprestimoDAO.salvar(emprestimo);
-
+        logService.registrar("RECEBER DEVOLUÇÃO: " + livro.getTitulo() + " (Aluno: " + emprestimo.getAluno().getNome() + ")");
         return mensagemResultado;
     }
 
@@ -122,8 +125,10 @@ public class EmprestimoService {
         LocalDate novaData = emprestimo.getDataDevolucaoPrevista().plusDays(7);
         emprestimo.setDataDevolucaoPrevista(novaData);
         System.out.println("Renovação solicitada (Implementar setter no Model para efetivar): Nova data " + novaData);
-
+        Livro livro = emprestimo.getLivro();
+        Aluno aluno = emprestimo.getAluno();
         emprestimoDAO.salvar(emprestimo);
+        logService.registrar("RENOVAR EMPRÉSTIMO: " + livro.getTitulo() + " para " + aluno.getNome());
     }
 
     //Consultas

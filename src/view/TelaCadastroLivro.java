@@ -129,7 +129,7 @@ public class TelaCadastroLivro extends JFrame {
             int copias = (int) spnCopias.getValue();
 
             //Cria o objeto
-            Livro novoLivro = new Livro(titulo, autor, genero, idade, copias);
+            Livro novoLivro = new Livro(0, titulo, autor, genero, idade, copias);
 
             //Chama o Service
             livroService.salvar(novoLivro);

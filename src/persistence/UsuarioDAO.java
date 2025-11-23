@@ -1,44 +1,228 @@
 package persistence;
 
 import model.*;
-
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
 public class UsuarioDAO {
+
+    private static final String ARQUIVO = "dados/usuarios.csv";
     private static List<Usuario> bancoUsuarios = new ArrayList<>();
-    // Simulador de Auto-Increment do banco
     private static long proximoId = 1;
 
-    // Assim que rodar o programa, esse usuário já existe.
     static {
-        criarUsuarioFake(new Administrador("Admin Principal", "admin", "123"));
-        criarUsuarioFake(new Bibliotecario("Ana Biblio", "biblio", "123"));
-        criarUsuarioFake(new Professor("Prof. Carlos", "prof", "123"));
-        criarUsuarioFake(new Aluno("João Aluno", "aluno", "123", "3A", LocalDate.of(2010, 5, 20)));
+        List<String> linhas = CsvUtil.lerArquivo(ARQUIVO);
+
+        if (linhas.isEmpty()) {
+            // SEED DE SEGURANÇA: Se o arquivo não existe, cria o Admin padrão
+            // Isso evita que você fique trancado fora do sistema na primeira execução
+            System.out.println("Arquivo de usuários vazio. Criando Admin padrão...");
+            Usuario admin = new Administrador("Admin Principal", "admin", "123");
+            salvarInterno(admin);
+            salvarEmArquivo(); // Cria o arquivo físico
+        } else {
+            carregarDoArquivo(linhas);
+        }
     }
-    private static void criarUsuarioFake(Usuario u) {
-        u.setId(proximoId++);
+
+    // --- LÓGICA DE LEITURA (CSV -> OBJETO) ---
+    private static void carregarDoArquivo(List<String> linhas) {
+        long maiorId = 0;
+
+        System.out.println("--- INICIANDO CARGA DE USUÁRIOS ---");
+
+        for (String linha : linhas) {
+            try {
+                if (linha.trim().isEmpty()) continue;
+
+                String[] dados = linha.split(";", -1);
+
+                System.out.println("Lendo: " + linha); // DEBUG
+
+                if (dados.length < 6) {
+                    System.out.println("ERRO: Linha com colunas insuficientes: " + dados.length);
+                    continue;
+                }
+
+                long id = Long.parseLong(dados[0]);
+
+                String tipo = dados[1].trim().toUpperCase();
+
+                String nome = dados[2];
+                String matricula = dados[3];
+                String senha = dados[4];
+                boolean ativo = Boolean.parseBoolean(dados[5]);
+
+                Usuario u = null;
+
+                switch (tipo) {
+                    case "ADMINISTRADOR":
+                    case "ADMIN": // Garantia extra
+                        u = new Administrador(id, nome, matricula, senha, ativo);
+                        break;
+
+                    case "BIBLIOTECARIO":
+                    case "BIBLIOTECÁRIO":
+                        u = new Bibliotecario(id, nome, matricula, senha, ativo);
+                        break;
+
+                    case "PROFESSOR":
+                        u = new Professor(id, nome, matricula, senha, ativo);
+                        break;
+
+                    case "ALUNO":
+                        String turma = (dados.length > 6) ? dados[6] : "";
+                        LocalDate dataNasc = null;
+                        // Tratamento robusto de data
+                        if (dados.length > 7 && dados[7] != null && !dados[7].equals("null") && !dados[7].trim().isEmpty()) {
+                            try {
+                                dataNasc = LocalDate.parse(dados[7].trim());
+                            } catch (Exception e) {
+                                System.out.println("Aviso: Data inválida para aluno " + nome);
+                            }
+                        }
+                        u = new Aluno(id, nome, matricula, senha, ativo, turma, dataNasc);
+                        break;
+
+                    default:
+                        System.out.println("ALERTA: Tipo desconhecido encontrado: [" + tipo + "]");
+                        break;
+                }
+
+                if (u != null) {
+                    bancoUsuarios.add(u);
+                    System.out.println("SUCCESS: Carregado " + u.getNome() + " (" + u.getTipo() + ")");
+                    if (id > maiorId) maiorId = id;
+                }
+
+            } catch (Exception e) {
+                System.err.println("ERRO CRÍTICO ao processar linha: " + linha);
+                e.printStackTrace();
+            }
+        }
+        proximoId = maiorId + 1;
+        System.out.println("--- CARGA FINALIZADA: " + bancoUsuarios.size() + " usuários ---");
+    }
+
+    // --- LÓGICA DE GRAVAÇÃO (OBJETO -> CSV) ---
+    private static void salvarEmArquivo() {
+        List<String> linhas = new ArrayList<>();
+
+        for (Usuario u : bancoUsuarios) {
+            StringBuilder sb = new StringBuilder();
+
+            // Dados Comuns a todos
+            sb.append(u.getId()).append(";")
+                    .append(u.getTipo()).append(";")
+                    .append(u.getNome()).append(";")
+                    .append(u.getMatricula()).append(";")
+                    .append(u.getSenha()).append(";")
+                    .append(u.isAtivo());
+
+            // Dados Específicos
+            if (u instanceof Aluno) {
+                Aluno a = (Aluno) u;
+                // Extra 1: Turma
+                sb.append(";").append(a.getTurma() == null ? "" : a.getTurma());
+                // Extra 2: Data Nascimento
+                sb.append(";").append(a.getDataNascimento() == null ? "null" : a.getDataNascimento().toString());
+            }
+            else {
+                sb.append("; ;null");
+            }
+
+            linhas.add(sb.toString());
+        }
+
+        // false = Sobrescreve o arquivo inteiro com a lista atualizada
+        CsvUtil.escreverArquivo(ARQUIVO, linhas, false);
+    }
+
+    // --- MÉTODOS CRUD ---
+
+    private static void salvarInterno(Usuario u) {
+        if (u.getId() == 0) u.setId(proximoId++);
         bancoUsuarios.add(u);
     }
-    // --- CRUD (Create, Read, Update, Delete) ---
+
     public void salvar(Usuario usuario) {
-        // Simula a gerar ID do banco
+        // Se for edição, remove a versão antiga da lista
+        bancoUsuarios.removeIf(u -> u.getId() == usuario.getId());
+
+        // Gera ID se for novo
         if (usuario.getId() == 0) {
             usuario.setId(proximoId++);
         }
+
+        // Adiciona na lista
         bancoUsuarios.add(usuario);
-        System.out.println("DAO: Usuário salvo: " + usuario.getNome());
+
+        // Persiste no arquivo
+        salvarEmArquivo();
+        System.out.println("Usuário salvo: " + usuario.getNome() + " (" + usuario.getTipo() + ")");
+    }
+
+    public void remover(long id) {
+        boolean removeu = bancoUsuarios.removeIf(u -> u.getId() == id);
+        if (removeu) {
+            salvarEmArquivo();
+        }
+    }
+
+    // --- MÉTODOS DE CONSULTA (Leitura em Memória - Rápido) ---
+
+    public List<Usuario> listarTodos() {
+        return new ArrayList<>(bancoUsuarios);
+    }
+
+    public List<Usuario> listarApenasAlunos() {
+        List<Usuario> alunos = new ArrayList<>();
+        for (Usuario u : bancoUsuarios) {
+            if (u instanceof Aluno) {
+                alunos.add(u);
+            }
+        }
+        return alunos;
+    }
+
+    public List<Usuario> listarApenasAdmin() {
+        List<Usuario> admin = new ArrayList<>();
+        for (Usuario u : bancoUsuarios) {
+            if (u instanceof Administrador) {
+                admin.add(u);
+            }
+        }
+        return admin;
+    }
+
+    public List<Usuario> listarApenasBibliotec() {
+        List<Usuario> bibliotec = new ArrayList<>();
+        for (Usuario u : bancoUsuarios) {
+            if (u instanceof Bibliotecario) {
+                bibliotec.add(u);
+            }
+        }
+        return bibliotec;
+    }
+
+    public List<Usuario> listarApenasProf() {
+        List<Usuario> prof = new ArrayList<>();
+        for (Usuario u : bancoUsuarios) {
+            if (u instanceof Professor) {
+                prof.add(u);
+            }
+        }
+        return prof;
     }
 
     public Usuario buscarPorMatricula(String matricula) {
         for (Usuario u : bancoUsuarios) {
-            if (u.getMatricula().equals(matricula)) {
+            if (u.getMatricula().equalsIgnoreCase(matricula)) {
                 return u;
             }
         }
-        return null; // Não encontrou
+        return null;
     }
 
     public Usuario buscarPorId(long id) {
@@ -48,60 +232,5 @@ public class UsuarioDAO {
             }
         }
         return null;
-    }
-    public Usuario buscarPorNome(String nome) {
-        for (Usuario u : bancoUsuarios) {
-            if (u.getNome().toUpperCase().contains(nome.toUpperCase())) {
-                return u;
-            }
-        }
-        return null;
-    }
-
-    public List<Usuario> listarTodos() {
-        // Retorna uma cópia para proteger a lista original
-        return new ArrayList<>(bancoUsuarios);
-    }
-
-    public void remover(long id) {
-        bancoUsuarios.removeIf(u -> u.getId() == id);
-    }
-
-    //Listar apenas
-    public List<Usuario> listarApenasAlunos() {
-        List<Usuario> alunos = new ArrayList<>();
-        for (Usuario u : bancoUsuarios) {
-            if (u instanceof Aluno) { // Verifica o tipo
-                alunos.add(u);
-            }
-        }
-        return alunos;
-    }
-    public List<Usuario> listarApenasProfessores() {
-        List<Usuario> professores = new ArrayList<>();
-        for (Usuario u : bancoUsuarios) {
-            if (u instanceof Professor) { // Verifica o tipo
-                professores.add(u);
-            }
-        }
-        return professores;
-    }
-    public List<Usuario> listarApenasAdmin() {
-        List<Usuario> admins = new ArrayList<>();
-        for (Usuario u : bancoUsuarios) {
-            if (u instanceof Administrador) { // Verifica o tipo
-                admins.add(u);
-            }
-        }
-        return admins;
-    }
-    public List<Usuario> listarApenasBibliotec() {
-        List<Usuario> bibliotecarios = new ArrayList<>();
-        for (Usuario u : bancoUsuarios) {
-            if (u instanceof Bibliotecario) { // Verifica o tipo
-                bibliotecarios.add(u);
-            }
-        }
-        return bibliotecarios;
     }
 }

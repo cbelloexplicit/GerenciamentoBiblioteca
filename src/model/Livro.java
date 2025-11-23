@@ -9,14 +9,14 @@ public class Livro {
     private int totalCopias;
     private int copiasDisponiveis;
 
-    public Livro(long id, String titulo, String autor, Genero genero, int idadeMinima, int totalCopias, int copiasDisponiveis) {
+    public Livro(long id, String titulo, String autor, Genero genero, int idadeMinima, int totalCopias) {
         this.id = id;
         this.titulo = titulo;
         this.autor = autor;
         this.genero = genero;
         this.idadeMinima = idadeMinima;
         this.totalCopias = totalCopias;
-        this.copiasDisponiveis = copiasDisponiveis;
+        this.copiasDisponiveis = totalCopias;
     }
 
     public Livro(String titulo, String autor, Genero genero, int idadeMinima, int totalCopias) {

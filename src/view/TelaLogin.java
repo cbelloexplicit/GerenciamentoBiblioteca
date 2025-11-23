@@ -5,9 +5,8 @@ import model.Usuario;
 import Service.LoginService;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 public class TelaLogin extends JFrame {
 
@@ -15,8 +14,8 @@ public class TelaLogin extends JFrame {
     private JPasswordField campoSenha;
     private JButton botaoEntrar;
     private JButton botaoSair;
+    private JButton btnRelatorioLogs;
 
-    // Conecta tela e Login
     private LoginService loginService;
 
     public TelaLogin() {
@@ -26,80 +25,94 @@ public class TelaLogin extends JFrame {
     }
 
     private void configurarJanela() {
-        setTitle("SGBE - Sistema de Biblioteca Escolar");
-        setSize(400, 300);
+        setTitle("SGBE - Acesso");
+        setSize(450, 350);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLocationRelativeTo(null);
+        setLocationRelativeTo(null); // Centraliza na tela
         setResizable(false);
+
+        // Define um layout que centraliza o painel de login no meio da janela
+        setLayout(new GridBagLayout());
+        // Define uma cor de fundo para a janela (Cinza suave)
+        getContentPane().setBackground(new Color(33, 32, 32));
     }
 
     private void inicializarComponentes() {
-        JPanel painel = new JPanel(new GridBagLayout());
-        painel.setBackground(new Color(240, 248, 255));
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5);
+        // --- 1. PAINEL PRINCIPAL ---
+        JPanel painelCaixa = new JPanel();
+        painelCaixa.setLayout(new BorderLayout(10, 10));
+        painelCaixa.setBackground(new Color(78, 77, 77));
+        painelCaixa.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(180, 180, 180), 1), // Borda fina cinza
+                new EmptyBorder(20, 20, 20, 20) // Margem interna (padding)
+        ));
 
-        // --- Título ---
-        JLabel labelTitulo = new JLabel("Acesso ao Sistema");
-        labelTitulo.setFont(new Font("Arial", Font.BOLD, 18));
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.gridwidth = 2; // Ocupa 2 colunas
-        painel.add(labelTitulo, gbc);
+        // --- 2. TÍTULO (Topo) ---
+        JLabel labelTitulo = new JLabel("Login do Sistema", SwingConstants.CENTER);
+        labelTitulo.setFont(new Font("Arial", Font.BOLD, 20));
+        labelTitulo.setForeground(Color.WHITE);
+        labelTitulo.setBorder(new EmptyBorder(0, 0, 15, 0)); // Espaço embaixo do título
+        painelCaixa.add(labelTitulo, BorderLayout.NORTH);
 
-        // --- Label Matrícula ---
-        gbc.gridwidth = 1;
-        gbc.gridy = 1;
-        gbc.anchor = GridBagConstraints.EAST; // Alinha à direita
-        painel.add(new JLabel("Matrícula:"), gbc);
+        // --- 3. FORMULÁRIO (Centro - Labels e Campos) ---
+        // GridLayout: 2 linhas, 2 colunas, com espaço de 5px entre eles
+        JPanel painelForm = new JPanel(new GridLayout(2, 2, 5, 10));
+        painelForm.setBackground(new Color(78, 77, 77));
 
-        // --- Campo Matrícula ---
-        campoMatricula = new JTextField(15);
-        gbc.gridx = 1;
-        gbc.anchor = GridBagConstraints.WEST; // Alinha à esquerda
-        painel.add(campoMatricula, gbc);
+        JLabel lblMatricula = new JLabel("Matrícula:");
+        lblMatricula.setFont(new Font("Arial", Font.PLAIN, 14));
 
-        // --- Label Senha ---
-        gbc.gridx = 0;
-        gbc.gridy = 2;
-        gbc.anchor = GridBagConstraints.EAST;
-        painel.add(new JLabel("Senha:"), gbc);
+        campoMatricula = new JTextField();
+        campoMatricula.setFont(new Font("Arial", Font.PLAIN, 14));
 
-        // --- Campo Senha ---
-        campoSenha = new JPasswordField(15);
-        gbc.gridx = 1;
-        gbc.anchor = GridBagConstraints.WEST;
-        painel.add(campoSenha, gbc);
+        JLabel lblSenha = new JLabel("Senha:");
+        lblSenha.setFont(new Font("Arial", Font.PLAIN, 14));
 
-        // --- Botões (Painel interno para alinhar) ---
-        JPanel painelBotoes = new JPanel(new FlowLayout());
-        painelBotoes.setBackground(new Color(240, 248, 255));
+        campoSenha = new JPasswordField();
+        campoSenha.setFont(new Font("Arial", Font.PLAIN, 14));
+
+        // Adiciona na ordem de leitura: Label -> Campo -> Label -> Campo
+        painelForm.add(lblMatricula);
+        painelForm.add(campoMatricula);
+        painelForm.add(lblSenha);
+        painelForm.add(campoSenha);
+
+        painelCaixa.add(painelForm, BorderLayout.CENTER);
+
+        // --- 4. BOTÕES (Rodapé) ---
+        JPanel painelBotoes = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        painelBotoes.setBackground(new Color(78, 77, 77));
+        painelBotoes.setBorder(new EmptyBorder(15, 0, 0, 0));
 
         botaoEntrar = new JButton("Entrar");
+        botaoEntrar.setBackground(new Color(70, 130, 180)); // Azul
+        botaoEntrar.setForeground(Color.WHITE);
+        botaoEntrar.setFont(new Font("Arial", Font.BOLD, 12));
+        botaoEntrar.setPreferredSize(new Dimension(100, 30));
+
         botaoSair = new JButton("Sair");
+        botaoSair.setBackground(new Color(200, 80, 80)); // Vermelho
+        botaoSair.setForeground(Color.WHITE);
+        botaoSair.setPreferredSize(new Dimension(80, 30));
 
         painelBotoes.add(botaoEntrar);
         painelBotoes.add(botaoSair);
 
-        gbc.gridx = 0;
-        gbc.gridy = 3;
-        gbc.gridwidth = 2;
-        gbc.anchor = GridBagConstraints.CENTER;
-        painel.add(painelBotoes, gbc);
+        painelCaixa.add(painelBotoes, BorderLayout.SOUTH);
 
-        add(painel);
+        // Adiciona a "caixa" pronta na janela principal
+        add(painelCaixa);
 
-        // --- AÇÕES DOS BOTÕES ---
+        // --- EVENTOS ---
+        configurarEventos();
+    }
 
-        botaoEntrar.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                tentarLogin();
-            }
-        });
-
+    private void configurarEventos() {
         botaoSair.addActionListener(e -> System.exit(0));
 
+        botaoEntrar.addActionListener(e -> tentarLogin());
+
+        // Permitir apertar ENTER na senha
         campoSenha.addActionListener(e -> tentarLogin());
     }
 
@@ -110,28 +123,15 @@ public class TelaLogin extends JFrame {
         try {
             Usuario usuarioLogado = loginService.logar(matricula, senha);
 
-            JOptionPane.showMessageDialog(this, "Bem-vindo(a), " + usuarioLogado.getNome() + "!");
-
             // Abre o Menu Principal
             MenuPrincipal menu = new MenuPrincipal(usuarioLogado);
             menu.setVisible(true);
 
+            // Fecha esta tela
             this.dispose();
 
         } catch (AutenticacaoException ex) {
             JOptionPane.showMessageDialog(this, ex.getMessage(), "Erro de Acesso", JOptionPane.ERROR_MESSAGE);
         }
-    }
-
-    // --- MAIN PARA TESTE RÁPIDO ---
-    public static void main(String[] args) {
-        // Tenta deixar com o visual do Windows/Mac
-        try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception ignored) {}
-
-        SwingUtilities.invokeLater(() -> {
-            new TelaLogin().setVisible(true);
-        });
     }
 }

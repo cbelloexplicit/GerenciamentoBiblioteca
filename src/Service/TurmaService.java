@@ -15,10 +15,14 @@ public class TurmaService {
 
     private TurmaDAO turmaDAO;
     private UsuarioDAO usuarioDAO;
+    private LogService logService;
+
 
     public TurmaService() {
         this.turmaDAO = new TurmaDAO();
         this.usuarioDAO = new UsuarioDAO();
+        this.logService = new LogService();
+
     }
 
     //SALVAR OU ATUALIZAR TURMA
@@ -48,8 +52,12 @@ public class TurmaService {
         if (existente != null && existente.getId() != turma.getId() && existente.getAnoLetivo() == turma.getAnoLetivo()) {
             throw new ValidacaoException("Já existe uma turma com este nome neste ano letivo.");
         }
-
+        boolean novo = (turma.getId() == 0);
         turmaDAO.salvar(turma);
+
+        // --- LOG AQUI ---
+        String acao = novo ? "CADASTRAR TURMA" : "EDITAR TURMA";
+        logService.registrar(acao + ": " + turma.getNome());
     }
 
     //remover
@@ -68,8 +76,10 @@ public class TurmaService {
                 throw new ValidacaoException("Não é possível remover a turma pois existem alunos matriculados nela.");
             }
         }
-
+        Turma l = turmaDAO.buscarPorId(id); // Pega o nome antes de apagar
         turmaDAO.remover(id);
+
+        logService.registrar("EXCLUIR TURMA: " + (l != null ? l.getNome() : id));
     }
 
     //CARREGAR ALUNOS DA TURMA
