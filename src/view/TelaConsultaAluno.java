@@ -26,7 +26,6 @@ public class TelaConsultaAluno extends JFrame {
 
     // Services
     private EmprestimoService emprestimoService;
-    // Vamos usar o DAO direto aqui apenas para consultar o programa vigente
     private ProgramaLeituraDAO programaDAO;
 
     private DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy");
@@ -51,7 +50,7 @@ public class TelaConsultaAluno extends JFrame {
 
     private void configurarJanela() {
         setTitle("Meu Painel - " + alunoLogado.getNome() + " (Turma: " + alunoLogado.getTurma() + ")");
-        setSize(700, 500);
+        setSize(750, 550);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
@@ -63,16 +62,22 @@ public class TelaConsultaAluno extends JFrame {
         // --- ABA 1: MEUS EMPRÉSTIMOS (ATIVOS) ---
         JPanel painelAtivos = new JPanel(new BorderLayout());
 
-        String[] colunas = {"Livro", "Data Retirada", "Devolução Prevista", "Status"};
-        DefaultTableModel modeloAtivos = new DefaultTableModel(colunas, 0);
+        String[] colunas = {"Livro (Exemplar)", "Data Retirada", "Devolução Prevista", "Status"};
+        DefaultTableModel modeloAtivos = new DefaultTableModel(colunas, 0) {
+            @Override
+            public boolean isCellEditable(int row, int col) { return false; }
+        };
         tabelaAtivos = new JTable(modeloAtivos);
         tabelaAtivos.setRowHeight(25);
+        // Ajuste de largura
+        tabelaAtivos.getColumnModel().getColumn(0).setPreferredWidth(250);
 
         painelAtivos.add(new JScrollPane(tabelaAtivos), BorderLayout.CENTER);
 
         // Legenda
         JLabel lblAviso = new JLabel(" * Fique atento às datas em vermelho!");
         lblAviso.setForeground(Color.RED);
+        lblAviso.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
         painelAtivos.add(lblAviso, BorderLayout.SOUTH);
 
         abas.addTab("Empréstimos Ativos", new ImageIcon(), painelAtivos, "Livros que estão comigo agora");
@@ -90,18 +95,22 @@ public class TelaConsultaAluno extends JFrame {
 
         // Caixa de destaque para o livro
         JPanel boxLivro = new JPanel(new GridLayout(3, 1));
-        boxLivro.setBorder(BorderFactory.createLineBorder(Color.BLUE, 2));
-        boxLivro.setBackground(new Color(230, 240, 255));
-        boxLivro.setPreferredSize(new Dimension(400, 150));
+        boxLivro.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(100, 149, 237), 2),
+                BorderFactory.createEmptyBorder(20, 20, 20, 20)
+        ));
+        boxLivro.setBackground(new Color(240, 248, 255)); // Alice Blue
+        boxLivro.setPreferredSize(new Dimension(500, 180));
 
         lblTituloPrograma = new JLabel("Carregando...", SwingConstants.CENTER);
         lblTituloPrograma.setFont(new Font("Arial", Font.BOLD, 14));
 
         lblLivroPrograma = new JLabel("---", SwingConstants.CENTER);
-        lblLivroPrograma.setFont(new Font("Serif", Font.BOLD | Font.ITALIC, 22));
-        lblLivroPrograma.setForeground(new Color(0, 0, 100));
+        lblLivroPrograma.setFont(new Font("Serif", Font.BOLD | Font.ITALIC, 24));
+        lblLivroPrograma.setForeground(new Color(25, 25, 112)); // Midnight Blue
 
         lblPrazoPrograma = new JLabel("---", SwingConstants.CENTER);
+        lblPrazoPrograma.setFont(new Font("Arial", Font.PLAIN, 14));
 
         boxLivro.add(lblTituloPrograma);
         boxLivro.add(lblLivroPrograma);
@@ -110,13 +119,22 @@ public class TelaConsultaAluno extends JFrame {
         gbc.gridy = 1;
         painelPrograma.add(boxLivro, gbc);
 
+        JLabel lblNota = new JLabel("Procure o bibliotecário para retirar este exemplar exato.");
+        lblNota.setFont(new Font("Arial", Font.ITALIC, 12));
+        gbc.gridy = 2;
+        painelPrograma.add(lblNota, gbc);
+
         abas.addTab("Programa de Leitura", null, painelPrograma, "Livro escolar obrigatório");
 
         // --- ABA 3: HISTÓRICO ---
         JPanel painelHistorico = new JPanel(new BorderLayout());
         String[] colHist = {"Livro", "Data Retirada", "Data Devolução", "Observação"};
-        DefaultTableModel modeloHist = new DefaultTableModel(colHist, 0);
+        DefaultTableModel modeloHist = new DefaultTableModel(colHist, 0) {
+            @Override
+            public boolean isCellEditable(int row, int col) { return false; }
+        };
         tabelaHistorico = new JTable(modeloHist);
+        tabelaHistorico.setRowHeight(25);
         painelHistorico.add(new JScrollPane(tabelaHistorico), BorderLayout.CENTER);
 
         abas.addTab("Histórico Completo", null, painelHistorico, "Tudo que já li");
@@ -139,6 +157,9 @@ public class TelaConsultaAluno extends JFrame {
         modelHist.setRowCount(0);
 
         for (Emprestimo e : historico) {
+            // Monta string "Título (#ID)"
+            String infoLivro = e.getExemplar().getLivro().getTitulo() + " (#" + e.getExemplar().getId() + ")";
+
             if (e.isAberto()) {
                 // Lógica de Status Visual
                 String status = "No Prazo";
@@ -148,7 +169,7 @@ public class TelaConsultaAluno extends JFrame {
                 }
 
                 modelAtivos.addRow(new Object[]{
-                        e.getLivro().getTitulo(),
+                        infoLivro,
                         e.getDataEmprestimo().format(fmt),
                         e.getDataDevolucaoPrevista().format(fmt),
                         status
@@ -161,7 +182,7 @@ public class TelaConsultaAluno extends JFrame {
                 }
 
                 modelHist.addRow(new Object[]{
-                        e.getLivro().getTitulo(),
+                        infoLivro, // Título do Livro no histórico também mostra qual exemplar foi usado
                         e.getDataEmprestimo().format(fmt),
                         e.getDataDevolucaoReal() != null ? e.getDataDevolucaoReal().format(fmt) : "-",
                         obs
@@ -170,31 +191,34 @@ public class TelaConsultaAluno extends JFrame {
         }
 
         // 2. Carregar Programa de Leitura
-        // Precisamos achar um programa que tenha ESTE aluno na lista
         List<ProgramaLeitura> programas = programaDAO.listarTodos();
         boolean encontrou = false;
 
         for (ProgramaLeitura prog : programas) {
-            // Verifica se o programa está ativo (datas)
+            // Verifica se o programa está ativo
             if (prog.isAtivo()) {
                 // Varre as atribuições desse programa
                 for (AtribuicaoLeitura at : prog.getAtribuicoes()) {
                     if (at.getAluno().getId() == alunoLogado.getId()) {
-                        lblTituloPrograma.setText(prog.getTitulo());
 
-                        if (at.getLivro() != null) {
-                            lblLivroPrograma.setText(at.getLivro().getTitulo());
+                        lblTituloPrograma.setText("Projeto: " + prog.getTitulo());
+
+                        // LÓGICA NOVA: Verifica Exemplar
+                        if (at.getExemplar() != null) {
+                            String tit = at.getExemplar().getLivro().getTitulo();
+                            long idEx = at.getExemplar().getId();
+                            lblLivroPrograma.setText("<html><center>" + tit + "<br><font size='4'>Exemplar #" + idEx + "</font></center></html>");
                         } else {
                             lblLivroPrograma.setText("(Nenhum livro atribuído)");
                         }
 
                         lblPrazoPrograma.setText("Ler até: " + prog.getDataFim().format(fmt));
                         encontrou = true;
-                        break; // Sai do loop interno
+                        break;
                     }
                 }
             }
-            if (encontrou) break; // Sai do loop externo se achou
+            if (encontrou) break;
         }
 
         if (!encontrou) {

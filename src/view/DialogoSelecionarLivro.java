@@ -1,7 +1,9 @@
 package view;
 
+import model.Exemplar;
 import model.Livro;
 import Service.LivroService;
+import persistence.ExemplarDAO;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -10,46 +12,60 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.List;
 
-// Extends JDialog significa que é uma janela "filha" que bloqueia a "mãe" até fechar
 public class DialogoSelecionarLivro extends JDialog {
 
     private JTextField txtBusca;
     private JTable tabela;
     private DefaultTableModel modelo;
-    private LivroService livroService;
 
-    // O livro que foi escolhido (começa nulo)
+    private LivroService livroService;
+    private ExemplarDAO exemplarDAO; // NOVO: Para consultar estoque
+
+    // O livro que foi escolhido
     private Livro livroSelecionado = null;
 
-    public DialogoSelecionarLivro(Frame owner) {
-        super(owner, "Selecionar Livro para o Aluno", true); // true = Modal (bloqueia a tela de trás)
-        this.livroService = new LivroService();
-
-        setSize(600, 400);
-        setLocationRelativeTo(owner);
-        setLayout(new BorderLayout(10, 10));
-
-        inicializar();
+    public DialogoSelecionarLivro(Dialog owner) { // Alterado para Dialog para funcionar sobre modais
+        super(owner, "Selecionar Título", true);
+        init();
     }
 
-    private void inicializar() {
+    public DialogoSelecionarLivro(Frame owner) {
+        super(owner, "Selecionar Título", true);
+        init();
+    }
+
+    private void init() {
+        this.livroService = new LivroService();
+        this.exemplarDAO = new ExemplarDAO();
+
+        setSize(600, 450);
+        setLocationRelativeTo(getParent());
+        setLayout(new BorderLayout(10, 10));
+
+        inicializarComponentes();
+    }
+
+    private void inicializarComponentes() {
         // --- BUSCA ---
         JPanel pnlNorte = new JPanel(new FlowLayout(FlowLayout.LEFT));
         txtBusca = new JTextField(25);
-        JButton btnBuscar = new JButton("Buscar por Título");
+        JButton btnBuscar = new JButton("Buscar");
 
-        pnlNorte.add(new JLabel("Pesquisar:"));
+        pnlNorte.add(new JLabel("Título/Autor:"));
         pnlNorte.add(txtBusca);
         pnlNorte.add(btnBuscar);
         add(pnlNorte, BorderLayout.NORTH);
 
         // --- TABELA ---
-        String[] colunas = {"ID", "Título", "Autor", "Estoque"};
+        String[] colunas = {"ID", "Título", "Autor", "Disponibilidade"};
         modelo = new DefaultTableModel(colunas, 0) {
             @Override
             public boolean isCellEditable(int row, int column) { return false; }
         };
         tabela = new JTable(modelo);
+        tabela.setRowHeight(25);
+        tabela.getColumnModel().getColumn(1).setPreferredWidth(200); // Título maior
+
         add(new JScrollPane(tabela), BorderLayout.CENTER);
 
         // --- RODAPÉ ---
@@ -64,8 +80,8 @@ public class DialogoSelecionarLivro extends JDialog {
 
         // --- EVENTOS ---
         btnBuscar.addActionListener(e -> pesquisar());
+        txtBusca.addActionListener(e -> pesquisar()); // Enter funciona
 
-        // Atalho: Duplo clique na tabela já seleciona
         tabela.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
                 if (e.getClickCount() == 2) confirmar();
@@ -79,27 +95,53 @@ public class DialogoSelecionarLivro extends JDialog {
     private void pesquisar() {
         String termo = txtBusca.getText();
         List<Livro> lista = livroService.buscarPorTitulo(termo);
-        if (lista.isEmpty()) lista = livroService.buscarPorAutor(termo); // Tenta autor também
+
+        List<Livro> porAutor = livroService.buscarPorAutor(termo);
+        for (Livro l : porAutor) {
+            if (lista.stream().noneMatch(existente -> existente.getId() == l.getId())) {
+                lista.add(l);
+            }
+        }
 
         modelo.setRowCount(0);
         for (Livro l : lista) {
+            // LÓGICA NOVA: Consulta o ExemplarDAO
+            List<Exemplar> disponiveis = exemplarDAO.buscarDisponiveisPorLivro(l.getId());
+            List<Exemplar> total = exemplarDAO.buscarPorLivro(l.getId());
+
+            String status = disponiveis.size() + " / " + total.size();
+
             modelo.addRow(new Object[]{
-                    l.getId(), l.getTitulo(), l.getAutor(), l.getCopiasDisponiveis()
+                    l.getId(),
+                    l.getTitulo(),
+                    l.getAutor(),
+                    status
             });
         }
     }
 
     private void confirmar() {
         int linha = tabela.getSelectedRow();
-        if (linha == -1) return;
+        if (linha == -1) {
+            JOptionPane.showMessageDialog(this, "Selecione um livro na tabela.");
+            return;
+        }
 
         long id = (long) tabela.getValueAt(linha, 0);
-        this.livroSelecionado = livroService.buscarPorId(id);
 
-        dispose(); // Fecha a janela e volta para a tela anterior
+        List<Exemplar> disponiveis = exemplarDAO.buscarDisponiveisPorLivro(id);
+        if (disponiveis.isEmpty()) {
+            int resp = JOptionPane.showConfirmDialog(this,
+                    "Este livro não possui exemplares disponíveis no momento.\nDeseja selecioná-lo mesmo assim?",
+                    "Estoque Esgotado", JOptionPane.YES_NO_OPTION);
+
+            if (resp != JOptionPane.YES_OPTION) return;
+        }
+
+        this.livroSelecionado = livroService.buscarPorId(id);
+        dispose();
     }
 
-    // Método para a tela mãe pegar o resultado
     public Livro getLivroSelecionado() {
         return livroSelecionado;
     }

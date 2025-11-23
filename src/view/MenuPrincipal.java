@@ -26,6 +26,7 @@ public class MenuPrincipal extends JFrame {
     private JButton btnRelatorioLogs;
     private JButton btnPesquisaPublica;
     private JButton btnLogout;
+    private JButton btnGerenciarEmprestimos;
 
     // Painel que agrupa os botões
     private JPanel painelGrid;
@@ -79,6 +80,7 @@ public class MenuPrincipal extends JFrame {
         btnPesquisaPublica = criarBotao("Pesquisar Livros", new Color(100, 149, 237)); // Azul Cornflower
         btnMeuPainelAluno = criarBotao("Meu Painel", new Color(147, 112, 219));
         btnRelatorioLogs = criarBotao("Logs de Acesso", new Color(112, 128, 144));
+        btnGerenciarEmprestimos = criarBotao("Gerenciar Empréstimos", new Color(255, 140, 0)); // Laranja Escuro
 
         painelGrid.add(btnCadUsuario);
         painelGrid.add(btnCadLivro);
@@ -92,6 +94,7 @@ public class MenuPrincipal extends JFrame {
         painelGrid.add(btnCadUsuario);
         painelGrid.add(btnRelatorioLogs);
         painelGrid.add(btnPesquisaPublica);
+        painelGrid.add(btnGerenciarEmprestimos);
 
         gbc.gridy = 1;
         gbc.insets = new Insets(0, 0, 0, 0);
@@ -148,6 +151,7 @@ public class MenuPrincipal extends JFrame {
                 btnCadTurma.setVisible(true);
                 btnEmprestimo.setVisible(true);
                 btnDevolucao.setVisible(true);
+                btnGerenciarEmprestimos.setVisible(true);
                 if(btnRelatorioLogs != null) btnRelatorioLogs.setVisible(true);
                 if(btnPesquisaPublica != null) btnPesquisaPublica.setVisible(true);
                 break;
@@ -156,6 +160,7 @@ public class MenuPrincipal extends JFrame {
             case "BIBLIOTECÁRIO":
                 btnCadLivro.setVisible(true);
                 btnCadGenero.setVisible(true);
+                btnGerenciarEmprestimos.setVisible(true);
                 btnEmprestimo.setVisible(true);
                 btnDevolucao.setVisible(true);
                 break;
@@ -163,10 +168,12 @@ public class MenuPrincipal extends JFrame {
             case "PROFESSOR":
                 btnProgramaLeitura.setVisible(true);
                 btnMinhasTurmas.setVisible(true);
+                btnGerenciarEmprestimos.setVisible(false);
                 if(btnPesquisaPublica != null) btnPesquisaPublica.setVisible(true);
                 break;
 
             case "ALUNO":
+                btnGerenciarEmprestimos.setVisible(false);
                 btnMeuPainelAluno.setVisible(true);
                 break;
 
@@ -203,7 +210,7 @@ public class MenuPrincipal extends JFrame {
         // BIBLIOTECA
         btnEmprestimo.addActionListener(e -> new TelaRealizarEmprestimo().setVisible(true));
         btnDevolucao.addActionListener(e -> new TelaDevolucao().setVisible(true));
-
+        btnGerenciarEmprestimos.addActionListener(e -> new TelaGerenciarEmprestimos().setVisible(true));
         // PROFESSOR
         btnProgramaLeitura.addActionListener(e -> new TelaProgramaLeitura().setVisible(true));
         btnMinhasTurmas.addActionListener(e -> new TelaMinhasTurmas(usuarioLogado).setVisible(true));

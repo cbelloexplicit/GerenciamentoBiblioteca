@@ -3,10 +3,11 @@ package Service;
 import Exception.ValidacaoException;
 import model.Aluno;
 import model.Emprestimo;
+import model.Exemplar;
 import model.Livro;
 import persistence.EmprestimoDAO;
 import persistence.LivroDAO;
-
+import persistence.ExemplarDAO;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -14,99 +15,80 @@ import java.util.List;
 public class EmprestimoService {
     private LogService logService;
     private EmprestimoDAO emprestimoDAO;
-    private LivroDAO livroDAO;
+    private ExemplarDAO exemplarDAO;
 
     public EmprestimoService() {
         this.emprestimoDAO = new EmprestimoDAO();
-        this.livroDAO = new LivroDAO();
+        this.exemplarDAO = new ExemplarDAO();
         this.logService = new LogService();
-
     }
 
-    //REGISTRAR EMPRÉSTIMO
-    //Verifica estoque, cria o registro e atualiza a quantidade de livros.
-    public void registrarEmprestimo(Aluno aluno, Livro livro) throws ValidacaoException {
-        //Validações Básicas
-        if (aluno == null) {
-            throw new ValidacaoException("É obrigatório selecionar um aluno.");
-        }
-        if (livro == null) {
-            throw new ValidacaoException("É obrigatório selecionar um livro.");
-        }
+    public void registrarEmprestimo(Aluno aluno, Exemplar exemplar, int diasPrazo) throws ValidacaoException {
+        // Validações Básicas
+        if (aluno == null) throw new ValidacaoException("Aluno obrigatório.");
+        if (exemplar == null) throw new ValidacaoException("Exemplar obrigatório.");
 
-        // Validação de Regra de Negócio: DISPONIBILIDADE
-        // Recarrega o livro do banco para garantir que o dado de estoque está fresco
-        Livro livroAtualizado = livroDAO.buscarPorId(livro.getId());
-
-        if (livroAtualizado.getCopiasDisponiveis() <= 0) {
-            throw new ValidacaoException("O livro '" + livroAtualizado.getTitulo() + "' não possui cópias disponíveis no momento.");
+        // 1. Verificar disponibilidade física
+        if (!exemplar.isDisponivel()) {
+            throw new ValidacaoException("Este exemplar (ID " + exemplar.getId() + ") já está emprestado.");
         }
 
-        // Verificar se o aluno já tem livros atrasados
-        List<Emprestimo> historicoAluno = emprestimoDAO.buscarPorAluno(aluno.getId());
-        for (Emprestimo e : historicoAluno) {
-            if (e.isAtrasado()) {
-                throw new ValidacaoException("O aluno possui empréstimos atrasados. Regularize antes de pegar novos livros.");
+        // 2. Verificar se está reservado (Regra do Programa de Leitura)
+        if (exemplar.isReservado()) {
+            System.out.println("AVISO: Emprestando exemplar reservado.");
+        }
+
+        // 3. Verificar atrasos do aluno
+        List<Emprestimo> historico = emprestimoDAO.buscarPorAluno(aluno.getId());
+        for (Emprestimo e : historico) {
+            if (e.getDataDevolucaoReal() == null && LocalDate.now().isAfter(e.getDataDevolucaoPrevista())) {
+                throw new ValidacaoException("Aluno com pendências. Regularize antes.");
             }
         }
 
-        //Preparação
-        int diasPrazo = 7; // Regra: 7 dias de prazo padrão
-        Emprestimo novoEmprestimo = new Emprestimo(aluno, livroAtualizado, LocalDate.now(), diasPrazo);
+        // Validação do Prazo
+        if (diasPrazo <= 0) throw new ValidacaoException("O prazo deve ser maior que zero.");
 
-        //Salva o empréstimo
-        emprestimoDAO.salvar(novoEmprestimo);
+        // Criação do Empréstimo
+        Emprestimo novo = new Emprestimo(aluno, exemplar, LocalDate.now(), diasPrazo);
 
-        // Atualiza o estoque do livro (Decrementa)
-        livroAtualizado.dimCopiasDisponiveis();
-        livroDAO.salvar(livroAtualizado);
-        logService.registrar("REALIZAR EMPRÉSTIMO: " + livro.getTitulo() + " para " + aluno.getNome());
+        // Atualiza status do Exemplar
+        exemplar.setDisponivel(false);
+        // Se ele estava reservado e o aluno pegou, podemos tirar a reserva ou manter até devolver?
+        // Geralmente, ao pegar, a reserva "sai" e vira empréstimo.
+        exemplar.setReservado(false);
 
-        System.out.println("Empréstimo realizado: " + aluno.getNome() + " pegou " + livroAtualizado.getTitulo());
+        // Salva tudo
+        emprestimoDAO.salvar(novo);
+        // exemplarDAO.salvar(exemplar); // Atualiza o CSV de exemplares
+
+        logService.registrar("EMPRÉSTIMO: Exemplar " + exemplar.getId() + " (" + exemplar.getLivro().getTitulo() + ") para " + aluno.getNome());
     }
 
-    //REGISTRAR DEVOLUÇÃO
-    //Finaliza o empréstimo, calcula multa (se houver) e repõe o estoque.
-    //return Uma mensagem de status (ex: "Devolvido com sucesso" ou "Devolvido com MULTA de R$ 5,00")
     public String registrarDevolucao(long idEmprestimo) throws ValidacaoException {
         Emprestimo emprestimo = emprestimoDAO.buscarPorId(idEmprestimo);
+        if (emprestimo == null) throw new ValidacaoException("Empréstimo não encontrado.");
 
-        if (emprestimo == null) {
-            throw new ValidacaoException("Empréstimo não encontrado.");
-        }
-
-        if (!emprestimo.isAberto()) {
-            throw new ValidacaoException("Este empréstimo já foi finalizado anteriormente.");
-        }
-
-        //Marca a data de hoje como devolução
+        // Baixa no empréstimo
         emprestimo.registrarDevolucao(LocalDate.now());
 
-        //Repõe o estoque do livro
-        Livro livro = emprestimo.getLivro();
-        // Recarrega o livro para garantir integridade
-        Livro livroNoBanco = livroDAO.buscarPorId(livro.getId());
-        if (livroNoBanco != null) {
-            livroNoBanco.addCopiasDisponiveis();
-            livroDAO.salvar(livroNoBanco);
-        }
+        // Devolve o exemplar ao estoque
+        Exemplar ex = emprestimo.getExemplar();
+        ex.setDisponivel(true);
+        // ex.setReservado(false); // Já garantimos isso no empréstimo
 
-        //Verifica Atraso e Calcula Multa
-        String mensagemResultado = "Devolução realizada com sucesso!";
-
-        // A lógica de isAtrasado() usa a dataPrevista vs dataReal
-        if (emprestimo.getDataDevolucaoReal().isAfter(emprestimo.getDataDevolucaoPrevista())) {
-            long diasAtraso = ChronoUnit.DAYS.between(emprestimo.getDataDevolucaoPrevista(), emprestimo.getDataDevolucaoReal());
-            double valorMulta = diasAtraso * 2.0; // R$ 2,00 por dia
-            mensagemResultado = String.format("ATENÇÃO: Devolução com %d dias de atraso. Multa gerada: R$ %.2f", diasAtraso, valorMulta);
-
-            System.out.println("Multa gerada para " + emprestimo.getAluno().getNome());
-        }
-
-        //Salva o empréstimo fechado
+        // exemplarDAO.salvar(ex);
         emprestimoDAO.salvar(emprestimo);
-        logService.registrar("RECEBER DEVOLUÇÃO: " + livro.getTitulo() + " (Aluno: " + emprestimo.getAluno().getNome() + ")");
-        return mensagemResultado;
+
+        // Lógica de Multa (Manteve igual)
+        String msg = "Devolvido com sucesso.";
+        if (emprestimo.getDataDevolucaoReal().isAfter(emprestimo.getDataDevolucaoPrevista())) {
+            long dias = ChronoUnit.DAYS.between(emprestimo.getDataDevolucaoPrevista(), emprestimo.getDataDevolucaoReal());
+            msg = "ATRASADO! Multa de R$ " + (dias * 2.0);
+        }
+
+        logService.registrar("DEVOLUÇÃO: " + ex.getId());
+        return msg;
     }
 
     //RENOVAR EMPRÉSTIMO
@@ -125,10 +107,10 @@ public class EmprestimoService {
         LocalDate novaData = emprestimo.getDataDevolucaoPrevista().plusDays(7);
         emprestimo.setDataDevolucaoPrevista(novaData);
         System.out.println("Renovação solicitada (Implementar setter no Model para efetivar): Nova data " + novaData);
-        Livro livro = emprestimo.getLivro();
+        Exemplar exemplar = emprestimo.getExemplar();
         Aluno aluno = emprestimo.getAluno();
         emprestimoDAO.salvar(emprestimo);
-        logService.registrar("RENOVAR EMPRÉSTIMO: " + livro.getTitulo() + " para " + aluno.getNome());
+        logService.registrar("RENOVAR EMPRÉSTIMO: " + exemplar.getLivro().getTitulo() + " para " + aluno.getNome());
     }
 
     //Consultas
@@ -144,5 +126,17 @@ public class EmprestimoService {
     public List<Emprestimo> buscarHistoricoAluno(Aluno aluno) {
         if (aluno == null) return List.of();
         return emprestimoDAO.buscarPorAluno(aluno.getId());
+    }
+    public void atualizarEmprestimo(long idEmprestimo, LocalDate novaDataPrevista) throws ValidacaoException {
+        Emprestimo e = emprestimoDAO.buscarPorId(idEmprestimo);
+        if (e == null) throw new ValidacaoException("Empréstimo não encontrado.");
+
+        if (novaDataPrevista.isBefore(e.getDataEmprestimo())) {
+            throw new ValidacaoException("A data prevista não pode ser anterior à data do empréstimo.");
+        }
+
+        e.setDataDevolucaoPrevista(novaDataPrevista);
+        emprestimoDAO.salvar(e);
+        logService.registrar("EDITAR EMPRÉSTIMO (ID " + idEmprestimo + "): Nova data prevista " + novaDataPrevista);
     }
 }

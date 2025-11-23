@@ -1,8 +1,10 @@
 package view;
 
 import Exception.ValidacaoException;
+import model.Exemplar;
 import model.Livro;
 import Service.LivroService;
+import persistence.ExemplarDAO;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -17,27 +19,32 @@ public class TelaGerenciarAcervo extends JFrame {
     private JTextField txtBusca;
     private JButton btnBuscar;
     private JTable tabelaLivros;
-    private DefaultTableModel modeloTabela; // Controla os dados da tabela
+    private DefaultTableModel modeloTabela;
 
     private JButton btnNovo;
     private JButton btnEditar;
     private JButton btnExcluir;
-    private JButton btnAtualizar; // Para recarregar a lista
+    private JButton btnExemplares; // NOVO: Botão para adicionar cópias físicas
+    private JButton btnAtualizar;
+
     private LivroService livroService;
+    private ExemplarDAO exemplarDAO; // NOVO: Para consultar contagem
 
     public TelaGerenciarAcervo() {
         this.livroService = new LivroService();
+        this.exemplarDAO = new ExemplarDAO(); // Inicializa DAO
+
         configurarJanela();
         inicializarComponentes();
         atualizarTabela(); // Carrega os dados assim que abre
     }
 
     private void configurarJanela() {
-        setTitle("Gerenciamento de Acervo");
-        setSize(800, 500);
+        setTitle("Gerenciamento de Acervo (Livros e Exemplares)");
+        setSize(900, 550); // Um pouco mais larga para caber os botões
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
-        setLayout(new BorderLayout()); // Layout: Norte (Busca), Centro (Tabela), Sul (Botões)
+        setLayout(new BorderLayout());
     }
 
     private void inicializarComponentes() {
@@ -58,10 +65,9 @@ public class TelaGerenciarAcervo extends JFrame {
         add(painelBusca, BorderLayout.NORTH);
 
         // --- 2. PAINEL CENTRAL (TABELA) ---
-        // Define as colunas
-        String[] colunas = {"ID", "Título", "Autor", "Gênero", "Idade Mín.", "Disponível"};
+        // Colunas atualizadas
+        String[] colunas = {"ID", "Título", "Autor", "Gênero", "Idade Mín.", "Estoque (Disp / Total)"};
 
-        // Cria o modelo impedindo edição direta nas células
         modeloTabela = new DefaultTableModel(colunas, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -70,24 +76,33 @@ public class TelaGerenciarAcervo extends JFrame {
         };
 
         tabelaLivros = new JTable(modeloTabela);
-        tabelaLivros.setSelectionMode(ListSelectionModel.SINGLE_SELECTION); // Só seleciona 1 por vez
+        tabelaLivros.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        // Aumenta a altura da linha para ficar mais legível
+        tabelaLivros.setRowHeight(25);
 
-        // Coloca a tabela num ScrollPane (barra de rolagem)
-        JScrollPane scrollPane = new JScrollPane(tabelaLivros);
-        add(scrollPane, BorderLayout.CENTER);
+        // Ajuste de largura das colunas
+        tabelaLivros.getColumnModel().getColumn(1).setPreferredWidth(200); // Título
+        tabelaLivros.getColumnModel().getColumn(5).setPreferredWidth(120); // Estoque
+
+        add(new JScrollPane(tabelaLivros), BorderLayout.CENTER);
 
         // --- 3. PAINEL SUL (BOTÕES DE AÇÃO) ---
         JPanel painelBotoes = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 
-        btnNovo = new JButton("Novo Livro");
+        btnNovo = new JButton("Novo Título");
         btnNovo.setBackground(new Color(100, 200, 100)); // Verde
 
-        btnEditar = new JButton("Editar Selecionado");
+        btnExemplares = new JButton("Gerenciar Exemplares"); // Botão Novo
+        btnExemplares.setToolTipText("Adicionar ou remover cópias físicas deste livro");
+        btnExemplares.setBackground(new Color(100, 149, 237)); // Azul
 
-        btnExcluir = new JButton("Excluir Selecionado");
+        btnEditar = new JButton("Editar Dados");
+
+        btnExcluir = new JButton("Excluir Título");
         btnExcluir.setBackground(new Color(200, 100, 100)); // Vermelho
 
         painelBotoes.add(btnNovo);
+        painelBotoes.add(btnExemplares);
         painelBotoes.add(btnEditar);
         painelBotoes.add(btnExcluir);
 
@@ -106,18 +121,16 @@ public class TelaGerenciarAcervo extends JFrame {
             preencherTabela(resultados);
         });
 
-        // Recarregar (Limpa busca)
+        // Recarregar
         btnAtualizar.addActionListener(e -> {
             txtBusca.setText("");
             atualizarTabela();
         });
 
-        // Novo Livro
+        // Novo Livro (Abre tela de cadastro)
         btnNovo.addActionListener(e -> {
             TelaCadastroLivro telaCadastro = new TelaCadastroLivro();
             telaCadastro.setVisible(true);
-
-            // Adiciona um "ouvinte" para quando a tela de cadastro fechar, atualizar a tabela aqui
             telaCadastro.addWindowListener(new WindowAdapter() {
                 @Override
                 public void windowClosed(WindowEvent e) {
@@ -126,20 +139,16 @@ public class TelaGerenciarAcervo extends JFrame {
             });
         });
 
+        // Gerenciar Exemplares (Adicionar cópias)
+        btnExemplares.addActionListener(e -> gerenciarExemplares());
+
+        // Editar
+        btnEditar.addActionListener(e -> {
+            JOptionPane.showMessageDialog(this, "Para editar título/autor, implemente passando o ID para a TelaCadastroLivro.");
+        });
+
         // Excluir
         btnExcluir.addActionListener(e -> excluirLivroSelecionado());
-
-        // Editar (Lógica básica de capturar ID)
-        btnEditar.addActionListener(e -> {
-            int linhaSelecionada = tabelaLivros.getSelectedRow();
-            if (linhaSelecionada == -1) {
-                JOptionPane.showMessageDialog(this, "Selecione um livro para editar.");
-                return;
-            }
-            // Pega o ID da coluna 0
-            long id = (long) tabelaLivros.getValueAt(linhaSelecionada, 0);
-            JOptionPane.showMessageDialog(this, "Funcionalidade de Edição: ID " + id + " selecionado.\n(Requer adaptar TelaCadastroLivro para receber ID).");
-        });
     }
 
     private void atualizarTabela() {
@@ -148,47 +157,90 @@ public class TelaGerenciarAcervo extends JFrame {
     }
 
     private void preencherTabela(List<Livro> lista) {
-        // Limpa a tabela atual
         modeloTabela.setRowCount(0);
 
         for (Livro l : lista) {
-            // Cria a linha visual com os dados do objeto
+            // LÓGICA NOVA: Consulta o DAO de exemplares para saber as quantidades
+            List<Exemplar> totalExemplares = exemplarDAO.buscarPorLivro(l.getId());
+            List<Exemplar> disponiveis = exemplarDAO.buscarDisponiveisPorLivro(l.getId());
+
+            String statusEstoque = disponiveis.size() + " / " + totalExemplares.size();
+
             Object[] linha = {
                     l.getId(),
                     l.getTitulo(),
                     l.getAutor(),
                     l.getGenero().getNome(),
                     l.getIdadeMinima() + " anos",
-                    l.getCopiasDisponiveis() + " / " + l.getTotalCopias()
+                    statusEstoque // Exibe "5 / 10"
             };
             modeloTabela.addRow(linha);
+        }
+    }
+
+    /**
+     * Funcionalidade rápida para adicionar exemplares físicos
+     * já que removemos a quantidade da tela de cadastro.
+     */
+    private void gerenciarExemplares() {
+        int linha = tabelaLivros.getSelectedRow();
+        if (linha == -1) {
+            JOptionPane.showMessageDialog(this, "Selecione um livro para gerenciar seus exemplares.");
+            return;
+        }
+
+        long idLivro = (long) tabelaLivros.getValueAt(linha, 0);
+        String titulo = (String) tabelaLivros.getValueAt(linha, 1);
+        Livro livro = livroService.buscarPorId(idLivro);
+
+        String input = JOptionPane.showInputDialog(this,
+                "Livro: " + titulo + "\n\nQuantas NOVAS cópias deseja adicionar ao acervo?",
+                "Adicionar Exemplares", JOptionPane.QUESTION_MESSAGE);
+
+        if (input != null && !input.isEmpty()) {
+            try {
+                int qtd = Integer.parseInt(input);
+                if (qtd <= 0) throw new NumberFormatException();
+
+                // Cria os exemplares
+                for (int i = 0; i < qtd; i++) {
+                    Exemplar novo = new Exemplar(livro);
+                    exemplarDAO.salvar(novo);
+                }
+
+                JOptionPane.showMessageDialog(this, qtd + " exemplares adicionados com sucesso!");
+                atualizarTabela();
+
+            } catch (NumberFormatException e) {
+                JOptionPane.showMessageDialog(this, "Quantidade inválida.");
+            }
         }
     }
 
     private void excluirLivroSelecionado() {
         int linha = tabelaLivros.getSelectedRow();
         if (linha == -1) {
-            JOptionPane.showMessageDialog(this, "Por favor, selecione um livro na tabela para excluir.");
+            JOptionPane.showMessageDialog(this, "Selecione um livro para excluir.");
             return;
         }
 
-        // Pega o ID que está na coluna 0 da linha selecionada
         long idLivro = (long) tabelaLivros.getValueAt(linha, 0);
         String titulo = (String) tabelaLivros.getValueAt(linha, 1);
 
         int confirmacao = JOptionPane.showConfirmDialog(this,
-                "Tem certeza que deseja excluir '" + titulo + "'?",
+                "Tem certeza que deseja excluir o cadastro de '" + titulo + "'?",
                 "Confirmar Exclusão",
                 JOptionPane.YES_NO_OPTION);
 
         if (confirmacao == JOptionPane.YES_OPTION) {
             try {
+                // O Service agora verifica se existem exemplares antes de deixar apagar
                 livroService.remover(idLivro);
-                atualizarTabela(); // Remove da tela
-                JOptionPane.showMessageDialog(this, "Livro excluído com sucesso.");
+                atualizarTabela();
+                JOptionPane.showMessageDialog(this, "Livro excluído.");
+
             } catch (ValidacaoException ex) {
-                // Se o livro estiver emprestado, o Service lança erro e mostramos aqui
-                JOptionPane.showMessageDialog(this, "Não foi possível excluir: " + ex.getMessage(), "Erro", JOptionPane.WARNING_MESSAGE);
+                JOptionPane.showMessageDialog(this, ex.getMessage(), "Não permitido", JOptionPane.WARNING_MESSAGE);
             }
         }
     }

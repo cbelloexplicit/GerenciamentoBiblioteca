@@ -1,52 +1,52 @@
-101;Duna;Frank Herbert;1;14;5;5
-102;Neuromancer;William Gibson;1;16;3;3
-104;Eu, Robô;Isaac Asimov;1;12;4;4
-105;Dom Casmurro;Machado de Assis;2;12;15;15
-106;Memórias Póstumas de Brás Cubas;Machado de Assis;2;14;10;10
-107;Vidas Secas;Graciliano Ramos;2;12;20;20
-108;O Cortiço;Aluísio Azevedo;2;14;12;12
-109;A Hora da Estrela;Clarice Lispector;2;12;8;8
-110;It: A Coisa;Stephen King;3;16;2;2
-111;O Iluminado;Stephen King;3;16;2;2
-112;Drácula;Bram Stoker;3;14;4;4
-114;Biologia: A Vida;Sônia Lopes;4;14;15;15
-115;História do Brasil;Boris Fausto;4;12;15;15
-118;O Senhor dos Anéis: A Sociedade do Anel;J.R.R. Tolkien;5;12;5;5
-121;Um Estudo em Vermelho;Arthur Conan Doyle;6;12;5;5
-122;Assassinato no Expresso do Oriente;Agatha Christie;6;12;7;7
-123;O Cão dos Baskerville;Arthur Conan Doyle;6;12;4;4
-124;A Ilha do Tesouro;Robert Louis Stevenson;7;10;5;5
-125;Viagem ao Centro da Terra;Júlio Verne;7;10;6;6
-126;O Diário de Anne Frank;Anne Frank;8;12;10;10
-127;Eu Sou Malala;Malala Yousafzai;8;12;5;5
-128;1808;Laurentino Gomes;9;12;8;8
-129;Sapiens: Uma breve história da humanidade;Yuval Noah Harari;9;14;4;4
-130;Sentimento do Mundo;Carlos Drummond de Andrade;10;12;10;10
-131;Livro do Desassossego;Fernando Pessoa;10;14;5;5
-132;O Pequeno Príncipe;Antoine de Saint-Exupéry;11;6;12;12
-133;O Menino Maluquinho;Ziraldo;11;6;10;10
-134;Reinações de Narizinho;Monteiro Lobato;11;8;8;8
-135;A Culpa é das Estrelas;John Green;12;12;6;6
-136;Extraordinário;R.J. Palacio;12;10;8;8
-137;O Código Da Vinci;Dan Brown;13;16;4;4
-138;Garota Exemplar;Gillian Flynn;13;18;2;2
-139;O Poder do Hábito;Charles Duhigg;14;14;3;3
-140;Maus;Art Spiegelman;15;14;5;5
-141;Batman: O Cavaleiro das Trevas;Frank Miller;15;14;4;4
-142;Persépolis;Marjane Satrapi;15;14;4;4
-143;1984;George Orwell;16;14;10;10
-144;A Revolução dos Bichos;George Orwell;16;12;15;15
-145;Orgulho e Preconceito;Jane Austen;16;12;6;6
-146;O Retrato de Dorian Gray;Oscar Wilde;16;14;5;5
-147;Bíblia Sagrada;Vários;17;0;5;5
-148;O Mundo de Sofia;Jostein Gaarder;17;14;6;6
-149;Java: Como Programar;Paul Deitel;18;16;2;2
-150;Código Limpo;Robert C. Martin;18;16;2;2
-151;Entendendo Algoritmos;Aditya Bhargava;18;14;3;3
-152;História da Arte;Gombrich;19;14;1;1
-119;Percy Jackson: O Ladrão de Raios;Rick Riordan;5;10;8;8
-113;Matemática: Volume Único;Gelson Iezzi;4;14;25;25
-117;Harry Potter e a Câmara Secreta;J.K. Rowling;5;10;10;10
-120;O Hobbit;J.R.R. Tolkien;5;10;6;6
-116;Harry Potter e a Pedra Filosofal;J.K. Rowling;5;10;12;12
-103;Jogos Vorazes;Suzanne Collins;1;12;8;8
+101;Duna;Frank Herbert;1;14
+102;Neuromancer;William Gibson;1;16
+103;Jogos Vorazes;Suzanne Collins;1;12
+104;Eu, Robô;Isaac Asimov;1;12
+105;Dom Casmurro;Machado de Assis;2;12
+106;Memórias Póstumas de Brás Cubas;Machado de Assis;2;14
+107;Vidas Secas;Graciliano Ramos;2;12
+108;O Cortiço;Aluísio Azevedo;2;14
+109;A Hora da Estrela;Clarice Lispector;2;12
+110;It: A Coisa;Stephen King;3;16
+111;O Iluminado;Stephen King;3;16
+112;Drácula;Bram Stoker;3;14
+113;Matemática: Volume Único;Gelson Iezzi;4;14
+114;Biologia: A Vida;Sônia Lopes;4;14
+115;História do Brasil;Boris Fausto;4;12
+116;Harry Potter e a Pedra Filosofal;J.K. Rowling;5;10
+117;Harry Potter e a Câmara Secreta;J.K. Rowling;5;10
+118;O Senhor dos Anéis: A Sociedade do Anel;J.R.R. Tolkien;5;12
+119;Percy Jackson: O Ladrão de Raios;Rick Riordan;5;10
+120;O Hobbit;J.R.R. Tolkien;5;10
+121;Um Estudo em Vermelho;Arthur Conan Doyle;6;12
+122;Assassinato no Expresso do Oriente;Agatha Christie;6;12
+123;O Cão dos Baskerville;Arthur Conan Doyle;6;12
+124;A Ilha do Tesouro;Robert Louis Stevenson;7;10
+125;Viagem ao Centro da Terra;Júlio Verne;7;10
+126;O Diário de Anne Frank;Anne Frank;8;12
+127;Eu Sou Malala;Malala Yousafzai;8;12
+128;1808;Laurentino Gomes;9;12
+129;Sapiens: Uma breve história da humanidade;Yuval Noah Harari;9;14
+130;Sentimento do Mundo;Carlos Drummond de Andrade;10;12
+131;Livro do Desassossego;Fernando Pessoa;10;14
+132;O Pequeno Príncipe;Antoine de Saint-Exupéry;11;6
+133;O Menino Maluquinho;Ziraldo;11;6
+134;Reinações de Narizinho;Monteiro Lobato;11;8
+135;A Culpa é das Estrelas;John Green;12;12
+136;Extraordinário;R.J. Palacio;12;10
+137;O Código Da Vinci;Dan Brown;13;16
+138;Garota Exemplar;Gillian Flynn;13;18
+139;O Poder do Hábito;Charles Duhigg;14;14
+140;Maus;Art Spiegelman;15;14
+141;Batman: O Cavaleiro das Trevas;Frank Miller;15;14
+142;Persépolis;Marjane Satrapi;15;14
+143;1984;George Orwell;16;14
+144;A Revolução dos Bichos;George Orwell;16;12
+145;Orgulho e Preconceito;Jane Austen;16;12
+146;O Retrato de Dorian Gray;Oscar Wilde;16;14
+147;Bíblia Sagrada;Vários;17;0
+148;O Mundo de Sofia;Jostein Gaarder;17;14
+149;Java: Como Programar;Paul Deitel;18;16
+150;Código Limpo;Robert C. Martin;18;16
+151;Entendendo Algoritmos;Aditya Bhargava;18;14
+152;História da Arte;Gombrich;19;14

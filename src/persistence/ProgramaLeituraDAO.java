@@ -1,14 +1,12 @@
 package persistence;
 
 import model.*;
-
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
 public class ProgramaLeituraDAO {
 
-    // Dois arquivos para representar a estrutura Mestre-Detalhe
     private static final String ARQUIVO_HEADER = "dados/programas.csv";
     private static final String ARQUIVO_DETALHES = "dados/programa_detalhes.csv";
 
@@ -17,26 +15,24 @@ public class ProgramaLeituraDAO {
 
     // --- CARGA INICIAL ---
     static {
-        // Carrega apenas se os arquivos existirem
         List<String> headers = CsvUtil.lerArquivo(ARQUIVO_HEADER);
         List<String> detalhes = CsvUtil.lerArquivo(ARQUIVO_DETALHES);
 
         if (!headers.isEmpty()) {
             carregarDoArquivo(headers, detalhes);
-        } else {
-            System.out.println("Arquivos de programa de leitura vazios ou inexistentes.");
         }
     }
 
-    // --- LÓGICA DE LEITURA (CSV -> OBJETO) ---
+    // --- LEITURA ---
     private static void carregarDoArquivo(List<String> headers, List<String> detalhes) {
         TurmaDAO turmaDAO = new TurmaDAO();
         UsuarioDAO usuarioDAO = new UsuarioDAO();
-        LivroDAO livroDAO = new LivroDAO();
+        // Agora usamos ExemplarDAO
+        ExemplarDAO exemplarDAO = new ExemplarDAO();
 
         long maiorId = 0;
 
-        // 1. Carregar os Cabeçalhos (Programas)
+        // 1. Carregar Headers (Mantido igual)
         for (String linha : headers) {
             try {
                 String[] dados = linha.split(";");
@@ -52,35 +48,27 @@ public class ProgramaLeituraDAO {
 
                 Turma turma = turmaDAO.buscarPorId(idTurma);
 
-                // Só cria se a turma existir
                 if (turma != null) {
-                    // Recarrega os alunos da turma para garantir que a lista não esteja vazia
-                    // turmaDAO.carregarAlunos(turma);
-
                     ProgramaLeitura prog = new ProgramaLeitura(id, titulo, turma, inicio, fim, trimestre, ano);
                     bancoProgramas.add(prog);
-
                     if (id > maiorId) maiorId = id;
                 }
-
             } catch (Exception e) {
-                System.err.println("Erro ao ler programa header: " + linha);
+                System.err.println("Erro header programa: " + linha);
             }
         }
         proximoId = maiorId + 1;
 
-        // 2. Carregar os Detalhes   e vincular aos programas
+        // 2. Carregar Detalhes (Agora com ID EXEMPLAR)
         for (String linha : detalhes) {
             try {
                 String[] dados = linha.split(";");
-                // Layout: id_programa;id_aluno;id_livro
+                // Layout NOVO: id_programa;id_aluno;ID_EXEMPLAR
 
                 long idPrograma = Long.parseLong(dados[0]);
                 long idAluno = Long.parseLong(dados[1]);
-                // Livro pode ser "null" se o aluno ficou sem livro
-                String idLivroStr = dados[2];
+                String idExemplarStr = dados[2];
 
-                // Acha o programa pai na lista já carregada
                 ProgramaLeitura programaPai = buscarNaListaPorId(idPrograma);
 
                 if (programaPai != null) {
@@ -88,32 +76,31 @@ public class ProgramaLeituraDAO {
 
                     if (alunoUser instanceof Aluno) {
                         Aluno aluno = (Aluno) alunoUser;
-                        Livro livro = null;
+                        Exemplar exemplar = null;
 
-                        if (!idLivroStr.equals("null") && !idLivroStr.isEmpty()) {
-                            livro = livroDAO.buscarPorId(Long.parseLong(idLivroStr));
+                        if (!idExemplarStr.equals("null") && !idExemplarStr.isEmpty()) {
+                            long idEx = Long.parseLong(idExemplarStr);
+                            exemplar = exemplarDAO.buscarPorId(idEx);
                         }
 
-                        // Cria a atribuição e adiciona na lista do programa
-                        AtribuicaoLeitura atribuicao = new AtribuicaoLeitura(aluno, livro);
+                        // Cria a atribuição atualizada
+                        AtribuicaoLeitura atribuicao = new AtribuicaoLeitura(aluno, exemplar);
                         programaPai.adicionarAtribuicao(atribuicao);
                     }
                 }
-
             } catch (Exception e) {
-                System.err.println("Erro ao ler detalhe do programa: " + linha);
+                System.err.println("Erro detalhe programa: " + linha);
             }
         }
     }
 
-    // --- LÓGICA DE GRAVAÇÃO (OBJETO -> CSV) ---
+    // --- GRAVAÇÃO ---
     private static void salvarEmArquivo() {
         List<String> linhasHeader = new ArrayList<>();
         List<String> linhasDetalhes = new ArrayList<>();
 
         for (ProgramaLeitura p : bancoProgramas) {
-            // 1. Grava Header
-            // Layout: id;titulo;id_turma;data_inicio;data_fim;trimestre;ano
+            // 1. Header
             StringBuilder sb = new StringBuilder();
             sb.append(p.getId()).append(";")
                     .append(p.getTitulo()).append(";")
@@ -125,15 +112,15 @@ public class ProgramaLeituraDAO {
 
             linhasHeader.add(sb.toString());
 
-            // 2. Grava Detalhes (Lista interna)
+            // 2. Detalhes
             for (AtribuicaoLeitura at : p.getAtribuicoes()) {
-                // Layout: id_programa;id_aluno;id_livro
+                // Layout NOVO: id_programa;id_aluno;ID_EXEMPLAR
                 StringBuilder sbDet = new StringBuilder();
                 sbDet.append(p.getId()).append(";")
                         .append(at.getAluno().getId()).append(";");
 
-                if (at.getLivro() != null) {
-                    sbDet.append(at.getLivro().getId());
+                if (at.getExemplar() != null) {
+                    sbDet.append(at.getExemplar().getId());
                 } else {
                     sbDet.append("null");
                 }
@@ -142,25 +129,16 @@ public class ProgramaLeituraDAO {
             }
         }
 
-        // Grava os dois arquivos
         CsvUtil.escreverArquivo(ARQUIVO_HEADER, linhasHeader, false);
         CsvUtil.escreverArquivo(ARQUIVO_DETALHES, linhasDetalhes, false);
     }
 
-    // --- MÉTODOS CRUD ---
-
+    // --- CRUD BÁSICO ---
     public void salvar(ProgramaLeitura programa) {
-        // Edição: remove antigo
         bancoProgramas.removeIf(p -> p.getId() == programa.getId());
-
-        if (programa.getId() == 0) {
-            programa.setId(proximoId++);
-        }
-
+        if (programa.getId() == 0) programa.setId(proximoId++);
         bancoProgramas.add(programa);
-        salvarEmArquivo(); // Persiste
-
-        System.out.println("Programa de Leitura ID " + programa.getId() + " gravado.");
+        salvarEmArquivo();
     }
 
     public void remover(long id) {
@@ -168,28 +146,20 @@ public class ProgramaLeituraDAO {
         salvarEmArquivo();
     }
 
-    public List<ProgramaLeitura> listarTodos() {
-        return new ArrayList<>(bancoProgramas);
-    }
+    public List<ProgramaLeitura> listarTodos() { return new ArrayList<>(bancoProgramas); }
 
-    public ProgramaLeitura buscarPorId(long id) {
-        return buscarNaListaPorId(id);
-    }
-
-    private static ProgramaLeitura buscarNaListaPorId(long id) {
-        for (ProgramaLeitura p : bancoProgramas) {
-            if (p.getId() == id) return p;
-        }
-        return null;
-    }
+    public ProgramaLeitura buscarPorId(long id) { return buscarNaListaPorId(id); }
 
     public List<ProgramaLeitura> buscarPorTurma(long idTurma) {
         List<ProgramaLeitura> resultado = new ArrayList<>();
         for (ProgramaLeitura p : bancoProgramas) {
-            if (p.getTurma().getId() == idTurma) {
-                resultado.add(p);
-            }
+            if (p.getTurma().getId() == idTurma) resultado.add(p);
         }
         return resultado;
+    }
+
+    private static ProgramaLeitura buscarNaListaPorId(long id) {
+        for (ProgramaLeitura p : bancoProgramas) if (p.getId() == id) return p;
+        return null;
     }
 }

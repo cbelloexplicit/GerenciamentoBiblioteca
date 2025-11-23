@@ -1,8 +1,10 @@
 package Service;
 
 import Exception.ValidacaoException;
+import model.Exemplar;
 import model.Genero;
 import model.Livro;
+import persistence.ExemplarDAO;
 import persistence.LivroDAO;
 
 import java.util.List;
@@ -10,14 +12,16 @@ import java.util.List;
 public class LivroService {
 
     private LivroDAO livroDAO;
+    private ExemplarDAO exemplarDAO; // Necessário para validar exclusão
     private LogService logService;
 
     public LivroService() {
         this.livroDAO = new LivroDAO();
+        this.exemplarDAO = new ExemplarDAO();
         this.logService = new LogService();
     }
 
-    //salvar ou atualizar
+    // SALVAR (Apenas Metadados)
     public void salvar(Livro livro) throws ValidacaoException {
 
         // Validações de Campos Obrigatórios
@@ -33,45 +37,20 @@ public class LivroService {
             throw new ValidacaoException("É necessário selecionar um gênero literário.");
         }
 
-        // Validações de Lógica
-
         if (livro.getIdadeMinima() < 0) {
             throw new ValidacaoException("A idade mínima não pode ser negativa.");
         }
 
-        if (livro.getTotalCopias() < 0) {
-            throw new ValidacaoException("O total de cópias não pode ser negativo.");
-        }
+        // NOTA: Não validamos mais estoque aqui. Isso é responsabilidade do ExemplarService.
 
-        // Se for um cadastro novo (ID=0), exige pelo menos 1 cópia
-        if (livro.getId() == 0 && livro.getTotalCopias() == 0) {
-            throw new ValidacaoException("Para cadastrar um novo livro, informe pelo menos 1 cópia.");
-        }
-
-        //Atualização de Estoque
-        // Se o usuário editar o total de cópias, ajustar as cópias disponíveis
-        if (livro.getId() > 0) {
-            Livro antigo = livroDAO.buscarPorId(livro.getId());
-            if (antigo != null) {
-                int diferenca = livro.getTotalCopias() - antigo.getTotalCopias();
-                // Ajusta o disponível somando a diferença (pode ser negativa se reduziu o acervo)
-                int novoDisponivel = antigo.getCopiasDisponiveis() + diferenca;
-
-                if (novoDisponivel < 0) {
-                    throw new ValidacaoException("Não é possível reduzir o acervo pois há livros emprestados.");
-                }
-            }
-        }
-
-        // Gravação e log
         boolean novo = (livro.getId() == 0);
         livroDAO.salvar(livro);
-        livroDAO.salvar(livro);
+
         String acao = novo ? "CADASTRAR LIVRO" : "EDITAR LIVRO";
         logService.registrar(acao + ": " + livro.getTitulo());
     }
 
-    //remover
+    // REMOVER
     public void remover(long id) throws ValidacaoException {
         Livro livro = livroDAO.buscarPorId(id);
 
@@ -79,16 +58,25 @@ public class LivroService {
             throw new ValidacaoException("Livro não encontrado.");
         }
 
-        // Validação Importante: Não apagar livro se todos os exemplares não estiverem na biblioteca
-        if (livro.getCopiasDisponiveis() < livro.getTotalCopias()) {
-            throw new ValidacaoException("Não é possível remover o livro pois há exemplares emprestados.");
+        // Validação de Integridade:
+        // Não podemos apagar o "Titulo" (Metadado) se existem exemplares físicos dele cadastrados.
+        List<Exemplar> exemplaresFisicos = exemplarDAO.buscarPorLivro(id);
+
+        if (!exemplaresFisicos.isEmpty()) {
+            throw new ValidacaoException(
+                    "Não é possível remover o livro '" + livro.getTitulo() +
+                            "' pois existem " + exemplaresFisicos.size() + " exemplares físicos cadastrados.\n" +
+                            "Remova os exemplares primeiro."
+            );
         }
+
         Livro l = livroDAO.buscarPorId(id);
         livroDAO.remover(id);
+
         logService.registrar("EXCLUIR LIVRO: " + (l != null ? l.getTitulo() : id));
     }
 
-    //CONSULTA
+    // CONSULTAS
 
     public List<Livro> listarTodos() {
         return livroDAO.listarTodos();
@@ -111,11 +99,5 @@ public class LivroService {
     public List<Livro> buscarPorGenero(Genero genero) {
         if (genero == null) return listarTodos();
         return livroDAO.buscarPorGenero(genero);
-    }
-
-    // Verifica disponibilidade (usado pelo Bibliotecário)
-    public boolean verificarDisponibilidade(long idLivro) {
-        Livro l = livroDAO.buscarPorId(idLivro);
-        return l != null && l.getCopiasDisponiveis() > 0;
     }
 }

@@ -3,6 +3,7 @@ package view;
 import Exception.ValidacaoException;
 import model.*;
 import Service.*;
+import persistence.ExemplarDAO;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -27,19 +28,21 @@ public class TelaProgramaLeitura extends JFrame {
     private DefaultTableModel modeloTabela;
 
     private JButton btnTrocarLivro;
-
     private JButton btnSalvar;
     private JButton btnCancelar;
 
     private ProgramaLeituraService programaService;
     private TurmaService turmaService;
     private GeneroService generoService;
+    private ExemplarDAO exemplarDAO; // Necessário para verificar estoque na troca manual
+
     private List<AtribuicaoLeitura> atribuicoesAtuais;
 
     public TelaProgramaLeitura() {
         this.programaService = new ProgramaLeituraService();
         this.turmaService = new TurmaService();
         this.generoService = new GeneroService();
+        this.exemplarDAO = new ExemplarDAO();
         this.atribuicoesAtuais = new ArrayList<>();
 
         configurarJanela();
@@ -48,22 +51,22 @@ public class TelaProgramaLeitura extends JFrame {
     }
 
     private void configurarJanela() {
-        setTitle("Planejar Programa de Leitura");
-        setSize(900, 650); // Um pouco maior
+        setTitle("Planejar Programa de Leitura (Alocação de Exemplares)");
+        setSize(950, 650);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout(10, 10));
     }
 
     private void inicializarComponentes() {
-        //formulario
+        // --- 1. FORMULÁRIO DE CONFIGURAÇÃO ---
         JPanel painelForm = new JPanel(new GridBagLayout());
         painelForm.setBorder(BorderFactory.createTitledBorder("Configurações do Projeto"));
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.anchor = GridBagConstraints.WEST;
 
-        gbc.gridx = 0; gbc.gridy = 0; painelForm.add(new JLabel("Título:"), gbc);
+        gbc.gridx = 0; gbc.gridy = 0; painelForm.add(new JLabel("Título do Projeto:"), gbc);
         txtTitulo = new JTextField("Leitura Trimestral", 20);
         gbc.gridx = 1; painelForm.add(txtTitulo, gbc);
 
@@ -75,54 +78,73 @@ public class TelaProgramaLeitura extends JFrame {
         cmbGenero = new JComboBox<>();
         gbc.gridx = 1; painelForm.add(cmbGenero, gbc);
 
+        // Datas
         try {
-            MaskFormatter mask = new MaskFormatter("##/##/####"); mask.setPlaceholderCharacter('_');
-            txtDataInicio = new JFormattedTextField(mask); txtDataFim = new JFormattedTextField(mask);
+            MaskFormatter mask = new MaskFormatter("##/##/####");
+            mask.setPlaceholderCharacter('_');
+            txtDataInicio = new JFormattedTextField(mask);
+            txtDataFim = new JFormattedTextField(mask);
+
+            // Sugestão de data (hoje)
+            txtDataInicio.setText(LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+            txtDataFim.setText(LocalDate.now().plusMonths(3).format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+
         } catch (Exception e){}
-        spnTrimestre = new JSpinner();
-        gbc.gridx = 2; gbc.gridy = 1; painelForm.add(new JLabel("Início:"), gbc); gbc.gridx = 3; painelForm.add(txtDataInicio, gbc);
-        gbc.gridx = 2; gbc.gridy = 2; painelForm.add(new JLabel("Fim:"), gbc); gbc.gridx = 3; painelForm.add(txtDataFim, gbc);
+
+        gbc.gridx = 2; gbc.gridy = 1; painelForm.add(new JLabel("Início:"), gbc);
+        gbc.gridx = 3; painelForm.add(txtDataInicio, gbc);
+
+        gbc.gridx = 2; gbc.gridy = 2; painelForm.add(new JLabel("Fim:"), gbc);
+        gbc.gridx = 3; painelForm.add(txtDataFim, gbc);
 
         btnGerarSugestao = new JButton("1. Gerar Sugestão Automática");
-        btnGerarSugestao.setBackground(new Color(100, 149, 237));
+        btnGerarSugestao.setBackground(new Color(100, 149, 237)); // Azul Cornflower
         btnGerarSugestao.setForeground(Color.WHITE);
+
         gbc.gridx = 0; gbc.gridy = 3; gbc.gridwidth = 4; gbc.anchor = GridBagConstraints.CENTER;
+        gbc.insets = new Insets(15, 5, 5, 5);
         painelForm.add(btnGerarSugestao, gbc);
 
         add(painelForm, BorderLayout.NORTH);
 
+        // --- 2. TABELA DE DISTRIBUIÇÃO ---
         JPanel painelCentral = new JPanel(new BorderLayout(5, 5));
-        painelCentral.setBorder(BorderFactory.createTitledBorder("Distribuição de Livros"));
+        painelCentral.setBorder(BorderFactory.createTitledBorder("Distribuição de Exemplares"));
 
-        String[] colunas = {"Aluno", "ID Livro", "Título do Livro"};
+        String[] colunas = {"Aluno", "ID Exemplar", "Título do Livro"};
 
         modeloTabela = new DefaultTableModel(colunas, 0) {
             @Override
-            public boolean isCellEditable(int row, int column) {
-                return false; // NINGUÉM EDITA NA MÃO MAIS!
-            }
+            public boolean isCellEditable(int row, int column) { return false; }
         };
 
         tabelaDistribuicao = new JTable(modeloTabela);
         tabelaDistribuicao.setRowHeight(25);
         tabelaDistribuicao.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
+        // Ajuste colunas
+        tabelaDistribuicao.getColumnModel().getColumn(1).setPreferredWidth(80); // ID menor
+        tabelaDistribuicao.getColumnModel().getColumn(2).setPreferredWidth(300); // Título maior
+
         painelCentral.add(new JScrollPane(tabelaDistribuicao), BorderLayout.CENTER);
 
-        // Botão de Trocar Livro (Fica logo abaixo da tabela)
-        btnTrocarLivro = new JButton("Trocar Livro do Aluno Selecionado (Pesquisar)");
-        btnTrocarLivro.setIcon(UIManager.getIcon("FileView.directoryIcon")); // Ícone de pasta/busca se tiver
+        // Botão de Trocar
+        btnTrocarLivro = new JButton("Trocar Livro do Aluno Selecionado");
+        btnTrocarLivro.setToolTipText("Escolha outro título e o sistema buscará um exemplar disponível.");
         painelCentral.add(btnTrocarLivro, BorderLayout.SOUTH);
 
         add(painelCentral, BorderLayout.CENTER);
 
-        // --- 3. PAINEL SUL (Salvar) ---
+        // --- 3. BOTÕES DE AÇÃO (SUL) ---
         JPanel painelBotoes = new JPanel();
         btnSalvar = new JButton("2. Salvar Programa");
-        btnSalvar.setBackground(new Color(34, 139, 34));
+        btnSalvar.setBackground(new Color(34, 139, 34)); // Verde Floresta
         btnSalvar.setForeground(Color.WHITE);
         btnSalvar.setFont(new Font("Arial", Font.BOLD, 14));
+        btnSalvar.setPreferredSize(new Dimension(200, 40));
 
         btnCancelar = new JButton("Cancelar");
+        btnCancelar.setPreferredSize(new Dimension(100, 40));
 
         painelBotoes.add(btnSalvar);
         painelBotoes.add(btnCancelar);
@@ -132,9 +154,58 @@ public class TelaProgramaLeitura extends JFrame {
         btnGerarSugestao.addActionListener(e -> gerarSugestao());
         btnSalvar.addActionListener(e -> salvarPrograma());
         btnCancelar.addActionListener(e -> dispose());
-
-        // Evento Novo: Trocar Livro
         btnTrocarLivro.addActionListener(e -> abrirDialogoTroca());
+    }
+
+    private void carregarCombos() {
+        cmbTurma.removeAllItems();
+        cmbGenero.removeAllItems();
+
+        List<Turma> turmas = turmaService.listarTodas();
+        for (Turma t : turmas) cmbTurma.addItem(t);
+
+        List<Genero> generos = generoService.listarTodos();
+        for (Genero g : generos) cmbGenero.addItem(g);
+    }
+
+    private void gerarSugestao() {
+        try {
+            Turma turma = (Turma) cmbTurma.getSelectedItem();
+            Genero genero = (Genero) cmbGenero.getSelectedItem();
+
+            if (turma == null || genero == null) throw new ValidacaoException("Selecione Turma e Gênero.");
+
+            // Carrega os alunos da turma (caso não estejam carregados)
+            turmaService.carregarAlunos(turma);
+
+            // Chama o serviço que agora busca EXEMPLARES reais
+            // Idade média hardcoded em 10, pode melhorar depois
+            atribuicoesAtuais = programaService.gerarSugestaoDistribuicao(turma, genero, 10);
+
+            atualizarTabela();
+
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Erro ao gerar: " + ex.getMessage(), "Aviso", JOptionPane.WARNING_MESSAGE);
+        }
+    }
+
+    private void atualizarTabela() {
+        modeloTabela.setRowCount(0);
+        for (AtribuicaoLeitura item : atribuicoesAtuais) {
+            String idExemplar = "";
+            String tituloLivro = "SEM LIVRO DISPONÍVEL";
+
+            if (item.getExemplar() != null) {
+                idExemplar = String.valueOf(item.getExemplar().getId());
+                tituloLivro = item.getExemplar().getLivro().getTitulo();
+            }
+
+            modeloTabela.addRow(new Object[]{
+                    item.getAluno().getNome(),
+                    idExemplar,
+                    tituloLivro
+            });
+        }
     }
 
     private void abrirDialogoTroca() {
@@ -144,87 +215,60 @@ public class TelaProgramaLeitura extends JFrame {
             return;
         }
 
-        // 1. Abre a janela de busca que criamos
+        // 1. Abre a janela para escolher o TÍTULO (Livro)
         DialogoSelecionarLivro dialogo = new DialogoSelecionarLivro(this);
-        dialogo.setVisible(true); // O código para aqui até ele fechar a janela
+        dialogo.setVisible(true); // Modal trava aqui
 
-        // 2. Quando fechar, verifica se ele escolheu algo
-        Livro novoLivro = dialogo.getLivroSelecionado();
+        Livro livroEscolhido = dialogo.getLivroSelecionado();
 
-        if (novoLivro != null) {
-            // 3. Atualiza a Lista Lógica (atribuicoesAtuais)
-            // Precisamos achar a atribuição correta. Assumindo que a ordem da tabela = ordem da lista
+        if (livroEscolhido != null) {
+            // 2. O sistema tenta achar um EXEMPLAR físico desse livro
+            List<Exemplar> disponiveis = exemplarDAO.buscarDisponiveisPorLivro(livroEscolhido.getId());
+
+            if (disponiveis.isEmpty()) {
+                JOptionPane.showMessageDialog(this,
+                        "Não há exemplares disponíveis na estante para '" + livroEscolhido.getTitulo() + "'.\n" +
+                                "Escolha outro título ou adicione cópias no acervo.",
+                        "Estoque Insuficiente", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            // Pega o primeiro disponível (Logística Simplificada)
+            Exemplar novoExemplar = disponiveis.get(0);
+
+            // 3. Atualiza a Lista Lógica e Visual
             AtribuicaoLeitura atribuicao = atribuicoesAtuais.get(linha);
-            atribuicao.setLivro(novoLivro);
+            atribuicao.setExemplar(novoExemplar);
 
-            // 4. Atualiza a Tabela Visual
-            modeloTabela.setValueAt(novoLivro.getId(), linha, 1);
-            modeloTabela.setValueAt(novoLivro.getTitulo(), linha, 2);
+            modeloTabela.setValueAt(novoExemplar.getId(), linha, 1);
+            modeloTabela.setValueAt(novoExemplar.getLivro().getTitulo(), linha, 2);
 
-            JOptionPane.showMessageDialog(this, "Livro atualizado para: " + novoLivro.getTitulo());
-        }
-    }
-
-    // ... (Métodos carregarCombos e gerarSugestao mantidos iguais ao anterior) ...
-    private void carregarCombos() {
-        List<Turma> turmas = turmaService.listarTodas();
-        for (Turma t : turmas) cmbTurma.addItem(t);
-        List<Genero> generos = generoService.listarTodos();
-        for (Genero g : generos) cmbGenero.addItem(g);
-    }
-
-    private void gerarSugestao() {
-        try {
-            Turma turma = (Turma) cmbTurma.getSelectedItem();
-            Genero genero = (Genero) cmbGenero.getSelectedItem();
-            if (turma == null || genero == null) throw new ValidacaoException("Selecione Turma e Gênero.");
-
-            turmaService.carregarAlunos(turma); // Carrega alunos
-
-            // Lógica fake de idade média ou real se tiver implementado
-            atribuicoesAtuais = programaService.gerarSugestaoDistribuicao(turma, genero, 10);
-
-            atualizarTabela();
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, ex.getMessage());
-        }
-    }
-
-    private void atualizarTabela() {
-        modeloTabela.setRowCount(0);
-        for (AtribuicaoLeitura item : atribuicoesAtuais) {
-            String livroId = (item.getLivro() != null) ? String.valueOf(item.getLivro().getId()) : "";
-            String livroTitulo = (item.getLivro() != null) ? item.getLivro().getTitulo() : "SEM LIVRO";
-
-            modeloTabela.addRow(new Object[]{
-                    item.getAluno().getNome(),
-                    livroId,
-                    livroTitulo
-            });
+            JOptionPane.showMessageDialog(this, "Livro trocado! Alocado exemplar #" + novoExemplar.getId());
         }
     }
 
     private void salvarPrograma() {
-        // A lógica de salvar fica MAIS SIMPLES agora, pois a lista 'atribuicoesAtuais'
-        // já foi atualizada diretamente pelo método abrirDialogoTroca().
-        // Não precisamos mais reconstruir lendo a tabela.
-
         try {
             String titulo = txtTitulo.getText();
             Turma turma = (Turma) cmbTurma.getSelectedItem();
-            int trimestre = 1; // Pegue do spinner
+
+            // Tratamento de datas
             DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy");
             LocalDate inicio = LocalDate.parse(txtDataInicio.getText(), fmt);
             LocalDate fim = LocalDate.parse(txtDataFim.getText(), fmt);
 
-            ProgramaLeitura prog = new ProgramaLeitura(titulo, turma, inicio, fim, trimestre, 2025);
-            prog.setAtribuicoes(atribuicoesAtuais); // Lista já atualizada!
+            // Cria o objeto Programa
+            ProgramaLeitura prog = new ProgramaLeitura(titulo, turma, inicio, fim, 1, LocalDate.now().getYear());
+            prog.setAtribuicoes(atribuicoesAtuais);
 
+            // O Service vai cuidar de RESERVAR os exemplares se a data for hoje
             programaService.salvarPrograma(prog);
-            JOptionPane.showMessageDialog(this, "Salvo com sucesso!");
+
+            JOptionPane.showMessageDialog(this, "Programa de Leitura salvo com sucesso!\nOs exemplares foram reservados.");
             dispose();
+
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Erro: " + e.getMessage());
+            JOptionPane.showMessageDialog(this, "Erro ao salvar: " + e.getMessage());
         }
     }
 }

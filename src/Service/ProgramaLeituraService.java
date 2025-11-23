@@ -2,39 +2,40 @@ package Service;
 
 import Exception.ValidacaoException;
 import model.*;
+import persistence.ExemplarDAO;
 import persistence.LivroDAO;
 import persistence.ProgramaLeituraDAO;
 import persistence.TurmaDAO;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 public class ProgramaLeituraService {
 
+    private ExemplarDAO exemplarDAO; // Nova dependência essencial
     private LivroDAO livroDAO;
-    private TurmaDAO turmaDAO; // garantir que a turma existe e tem alunos
+    private TurmaDAO turmaDAO;
     private ProgramaLeituraDAO programaDAO;
     private LogService logService;
 
     public ProgramaLeituraService() {
+        this.exemplarDAO = new ExemplarDAO();
         this.livroDAO = new LivroDAO();
         this.turmaDAO = new TurmaDAO();
         this.programaDAO = new ProgramaLeituraDAO();
         this.logService = new LogService();
-
     }
 
-    //GERAR SUGESTÃO AUTOMÁTICA DE DISTRIBUIÇÃO
-    //Pega todos os livros do gênero, filtra os impróprios para a idade, cria um "pool" de cópias disponíveis e sorteia entre os alunos.
-    // turma A turma que vai ler
-    // genero O gênero literário escolhido pelo professor.
-    // idadeMediaTurma A idade base para filtrar conteúdo impróprio.
-    // return Uma lista de pares (Aluno -> Livro Sugerido) para o professor revisar.
-
+    /**
+     * GERAR SUGESTÃO AUTOMÁTICA COM EXEMPLARES ÚNICOS
+     * Busca exemplares físicos que atendem aos critérios (Gênero + Idade)
+     * e que não estejam nem emprestados nem reservados.
+     */
     public List<AtribuicaoLeitura> gerarSugestaoDistribuicao(Turma turma, Genero genero, int idadeMediaTurma) throws ValidacaoException {
 
-        // Validações Iniciais
+        // 1. Validações Básicas
         if (turma == null || turma.getAlunos().isEmpty()) {
             throw new ValidacaoException("A turma selecionada não possui alunos matriculados.");
         }
@@ -42,60 +43,61 @@ public class ProgramaLeituraService {
             throw new ValidacaoException("Selecione um gênero literário.");
         }
 
-        // Busca livros do gênero e filtra por IDADE e ESTOQUE
-        List<Livro> livrosDoGenero = livroDAO.buscarPorGenero(genero);
-        List<Livro> poolDeCopias = new ArrayList<>();
+        // 2. Buscar o 'Pool' de Exemplares Disponíveis
+        // Estratégia: Pegar todos os exemplares e filtrar em memória (ou usar método específico no DAO se houver)
+        List<Exemplar> todosExemplares = exemplarDAO.listarTodos();
+        List<Exemplar> poolDisponivel = new ArrayList<>();
 
-        for (Livro l : livrosDoGenero) {
-            // Idade apropriada
-            boolean idadeOk = l.getIdadeMinima() <= idadeMediaTurma;
+        for (Exemplar ex : todosExemplares) {
+            Livro livro = ex.getLivro();
 
-            //Tem cópia na estante?
-            boolean temEstoque = l.getCopiasDisponiveis() > 0;
+            // Filtros de Regra de Negócio:
+            boolean generoBate = livro.getGenero().getID() == genero.getID();
+            boolean idadeOk = livro.getIdadeMinima() <= idadeMediaTurma;
+            boolean estaNaEstante = ex.isDisponivel(); // Não está emprestado
+            boolean naoEstaReservado = !ex.isReservado(); // Não está separado para outro projeto
 
-            if (idadeOk && temEstoque) {
-                // Adiciona ao "pool" o número exato de cópias disponíveis
-                // Se tem 3 cópias de "Duna", adiciona 3 vezes na lista.
-                for (int i = 0; i < l.getCopiasDisponiveis(); i++) {
-                    poolDeCopias.add(l);
-                }
+            if (generoBate && idadeOk && estaNaEstante && naoEstaReservado) {
+                poolDisponivel.add(ex);
             }
         }
 
-        if (poolDeCopias.isEmpty()) {
-            throw new ValidacaoException("Não há livros disponíveis deste gênero para a idade informada.");
+        if (poolDisponivel.isEmpty()) {
+            throw new ValidacaoException("Não há exemplares físicos disponíveis deste gênero para a idade informada.");
         }
 
-        //O Sorteio (Embaralhamento)
-        Collections.shuffle(poolDeCopias);
+        // 3. O Sorteio
+        Collections.shuffle(poolDisponivel);
 
-        //A Distribuição
+        // 4. A Distribuição (Aluno <-> Exemplar Único)
         List<AtribuicaoLeitura> sugestao = new ArrayList<>();
-        int indexLivro = 0;
+        int indexExemplar = 0;
 
         for (Aluno aluno : turma.getAlunos()) {
-            Livro livroSorteado = null;
+            Exemplar exemplarSorteado = null;
 
-            // Se ainda tem livro no pool, entrega um para o aluno
-            if (indexLivro < poolDeCopias.size()) {
-                livroSorteado = poolDeCopias.get(indexLivro);
-                indexLivro++;
+            if (indexExemplar < poolDisponivel.size()) {
+                exemplarSorteado = poolDisponivel.get(indexExemplar);
+                indexExemplar++;
             } else {
-                // Acabaram os livros! O aluno fica com NULL (professor resolve manualmente na tela)
                 System.out.println("Aviso: Faltou livro para o aluno " + aluno.getNome());
+                // O professor terá que resolver manualmente na tela
             }
 
-            sugestao.add(new AtribuicaoLeitura(aluno, livroSorteado));
+            // Nota: Certifique-se que sua classe AtribuicaoLeitura foi atualizada para aceitar Exemplar no construtor
+            sugestao.add(new AtribuicaoLeitura(aluno, exemplarSorteado));
         }
 
         return sugestao;
     }
 
-    //EFETIVAR (SALVAR) O PROGRAMA
-    //Recebe o objeto completo já editado pelo professor e grava.
+    /**
+     * SALVAR O PROGRAMA E APLICAR RESERVAS
+     * Se a data de início for hoje (ou passada), os exemplares ficam "travados" (reservados).
+     */
     public void salvarPrograma(ProgramaLeitura programa) throws ValidacaoException {
 
-        //Validações do Cabeçalho
+        // 1. Validações do Cabeçalho
         if (programa.getTitulo() == null || programa.getTitulo().isEmpty()) {
             throw new ValidacaoException("O título do programa é obrigatório.");
         }
@@ -109,32 +111,60 @@ public class ProgramaLeituraService {
             throw new ValidacaoException("A lista de distribuição de livros está vazia.");
         }
 
-        // Processar as Atribuições (Baixar Estoque)
+        // 2. Verifica se devemos ativar a RESERVA agora
+        // Se DataInicio <= Hoje, o programa está valendo e os livros devem ser bloqueados para empréstimo comum.
+        boolean programaAtivo = !programa.getDataInicio().isAfter(LocalDate.now());
+
+        // 3. Processar Exemplares
         for (AtribuicaoLeitura item : programa.getAtribuicoes()) {
-            Livro livro = item.getLivro();
+            Exemplar exemplar = item.getExemplar(); // Atualize o getter em AtribuicaoLeitura
             Aluno aluno = item.getAluno();
 
-            if (livro != null) {
-                // Recarrega do banco para ver estoque atual (segurança contra concorrencia)
-                Livro livroAtual = livroDAO.buscarPorId(livro.getId());
+            if (exemplar != null) {
+                // Recarrega do banco para garantir status atual (evita conflito de concorrência)
+                Exemplar exemplarAtual = exemplarDAO.buscarPorId(exemplar.getId());
 
-                if (livroAtual.getCopiasDisponiveis() <= 0) {
-                    throw new ValidacaoException("O livro '" + livro.getTitulo() + "' atribuído ao aluno " + aluno.getNome() + " não tem mais cópias disponíveis.");
+                if (exemplarAtual == null) {
+                    throw new ValidacaoException("O exemplar ID " + exemplar.getId() + " não existe mais no acervo.");
                 }
 
-                // Decrementa estoque (Reserva para o projeto)
-                livroAtual.dimCopiasDisponiveis();
-                livroDAO.salvar(livroAtual);
+                // Se vamos reservar, temos que garantir que ele AINDA está disponível
+                if (programaAtivo) {
+                    if (!exemplarAtual.isDisponivel()) {
+                        throw new ValidacaoException("Conflito: O exemplar '" + exemplarAtual.getLivro().getTitulo() +
+                                "' (ID: " + exemplarAtual.getId() + ") acabou de ser emprestado para outra pessoa.");
+                    }
+
+                    // Aplica a Reserva
+                    exemplarAtual.setReservado(true);
+                    exemplarDAO.salvar(exemplarAtual); // Atualiza status no CSV de exemplares
+                }
             }
         }
 
-        //Salvar o Programa
+        // 4. Salvar o Programa (Cabeçalho e Lista de Pares)
         boolean novo = (programa.getId() == 0);
         programaDAO.salvar(programa);
 
-        // --- LOG AQUI ---
-        logService.registrar("GERAR PROGRAMA NOVO" + ": " + programa.getTitulo() + " | " + programa.getTurma().getNome());
-        System.out.println("SUCESSO: Programa '" + programa.getTitulo() + "' salvo com " + programa.getAtribuicoes().size() + " atribuições.");
+        // 5. Log
+        String statusReserva = programaAtivo ? " [RESERVAS APLICADAS]" : " [AGENDADO]";
+        logService.registrar("PROGRAMA SALVO: " + programa.getTitulo() + statusReserva + " | Turma: " + programa.getTurma().getNome());
 
+        System.out.println("SUCESSO: Programa salvo. " + programa.getAtribuicoes().size() + " exemplares processados.");
+    }
+    public Exemplar buscarReservaParaAluno(Aluno aluno) {
+        // Busca programas da turma do aluno
+        List<ProgramaLeitura> programas = programaDAO.buscarPorTurma(turmaDAO.buscarPorNome(aluno.getTurma()).getId());
+
+        for (ProgramaLeitura p : programas) {
+            if (p.isAtivo()) {
+                for (AtribuicaoLeitura at : p.getAtribuicoes()) {
+                    if (at.getAluno().getId() == aluno.getId()) {
+                        return at.getExemplar(); // Retorna o exemplar reservado
+                    }
+                }
+            }
+        }
+        return null;
     }
 }

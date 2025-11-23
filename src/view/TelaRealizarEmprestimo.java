@@ -2,156 +2,143 @@ package view;
 
 import Exception.ValidacaoException;
 import model.Aluno;
-import model.Livro;
+import model.Emprestimo;
+import model.Exemplar;
 import model.Usuario;
 import Service.EmprestimoService;
-import Service.LivroService;
+import Service.ProgramaLeituraService; // Novo Import
 import Service.UsuarioService;
+import persistence.ExemplarDAO;
 
 import javax.swing.*;
+import javax.swing.border.TitledBorder;
 import java.awt.*;
+import java.util.List;
 
 public class TelaRealizarEmprestimo extends JFrame {
 
-    // Componentes Visuais
     private JTextField txtMatriculaAluno;
     private JLabel lblNomeAluno;
     private JButton btnBuscarAluno;
+    private JTextArea txtInfoAluno; // Área de texto para mostrar reservas/empréstimos
 
-    private JTextField txtIdLivro;
+    private JTextField txtIdExemplar;
     private JLabel lblTituloLivro;
-    private JLabel lblStatusLivro;
-    private JButton btnBuscarLivro;
+    private JLabel lblStatusExemplar;
+    private JButton btnBuscarExemplar;
 
+    private JSpinner spnDiasPrazo;
     private JButton btnConfirmar;
     private JButton btnCancelar;
 
-    // Controle de Estado (Armazena quem foi encontrado na busca)
     private Aluno alunoSelecionado;
-    private Livro livroSelecionado;
+    private Exemplar exemplarSelecionado;
 
-    // Services
     private EmprestimoService emprestimoService;
     private UsuarioService usuarioService;
-    private LivroService livroService;
+    private ExemplarDAO exemplarDAO;
+    private ProgramaLeituraService programaService; // Novo Service
 
     public TelaRealizarEmprestimo() {
-        // Inicializa os serviços
         this.emprestimoService = new EmprestimoService();
         this.usuarioService = new UsuarioService();
-        this.livroService = new LivroService();
+        this.exemplarDAO = new ExemplarDAO();
+        this.programaService = new ProgramaLeituraService();
 
         configurarJanela();
         inicializarComponentes();
     }
 
     private void configurarJanela() {
-        setTitle("Registrar Novo Empréstimo");
-        setSize(600, 400);
+        setTitle("Registrar Empréstimo");
+        setSize(750, 500); // Mais largo para caber o painel lateral
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
-        setLayout(new GridBagLayout());
+        setLayout(new BorderLayout(10, 10));
     }
 
     private void inicializarComponentes() {
+        // --- PAINEL CENTRAL (Formulário) ---
+        JPanel painelForm = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(10, 10, 10, 10);
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.anchor = GridBagConstraints.WEST;
 
-        // --- SEÇÃO ALUNO ---
+        // 1. Aluno
+        gbc.gridx = 0; gbc.gridy = 0; painelForm.add(new JLabel("Matrícula Aluno:"), gbc);
 
-        // 1. Label e Campo Matrícula
-        gbc.gridx = 0; gbc.gridy = 0;
-        add(new JLabel("Matrícula do Aluno:"), gbc);
-
-        JPanel painelBuscaAluno = new JPanel(new BorderLayout(5, 0));
+        JPanel pBuscaAluno = new JPanel(new BorderLayout(5, 0));
         txtMatriculaAluno = new JTextField(15);
         btnBuscarAluno = new JButton("Buscar");
-        painelBuscaAluno.add(txtMatriculaAluno, BorderLayout.CENTER);
-        painelBuscaAluno.add(btnBuscarAluno, BorderLayout.EAST);
+        pBuscaAluno.add(txtMatriculaAluno, BorderLayout.CENTER);
+        pBuscaAluno.add(btnBuscarAluno, BorderLayout.EAST);
+        gbc.gridx = 1; painelForm.add(pBuscaAluno, gbc);
 
-        gbc.gridx = 1;
-        add(painelBuscaAluno, gbc);
-
-        // 2. Feedback do Aluno (Nome encontrado)
-        gbc.gridx = 0; gbc.gridy = 1;
-        add(new JLabel("Aluno Selecionado:"), gbc);
-
-        lblNomeAluno = new JLabel("[Nenhum aluno selecionado]");
+        gbc.gridx = 0; gbc.gridy = 1; painelForm.add(new JLabel("Nome:"), gbc);
+        lblNomeAluno = new JLabel("---");
         lblNomeAluno.setFont(new Font("Arial", Font.BOLD, 14));
-        lblNomeAluno.setForeground(Color.DARK_GRAY);
-        gbc.gridx = 1;
-        add(lblNomeAluno, gbc);
+        lblNomeAluno.setForeground(Color.BLUE);
+        gbc.gridx = 1; painelForm.add(lblNomeAluno, gbc);
 
-        // Separador visual
-        gbc.gridx = 0; gbc.gridy = 2; gbc.gridwidth = 2;
-        add(new JSeparator(), gbc);
-        gbc.gridwidth = 1; // Reset
+        // 2. Exemplar
+        gbc.gridx = 0; gbc.gridy = 2; painelForm.add(new JLabel("ID Exemplar:"), gbc);
 
-        // --- SEÇÃO LIVRO ---
+        JPanel pBuscaEx = new JPanel(new BorderLayout(5, 0));
+        txtIdExemplar = new JTextField(15);
+        btnBuscarExemplar = new JButton("Buscar");
+        pBuscaEx.add(txtIdExemplar, BorderLayout.CENTER);
+        pBuscaEx.add(btnBuscarExemplar, BorderLayout.EAST);
+        gbc.gridx = 1; painelForm.add(pBuscaEx, gbc);
 
-        // 3. Label e Campo ID Livro
-        gbc.gridx = 0; gbc.gridy = 3;
-        add(new JLabel("ID do Livro:"), gbc);
-
-        JPanel painelBuscaLivro = new JPanel(new BorderLayout(5, 0));
-        txtIdLivro = new JTextField(15);
-        btnBuscarLivro = new JButton("Buscar");
-        painelBuscaLivro.add(txtIdLivro, BorderLayout.CENTER);
-        painelBuscaLivro.add(btnBuscarLivro, BorderLayout.EAST);
-
-        gbc.gridx = 1;
-        add(painelBuscaLivro, gbc);
-
-        // 4. Feedback do Livro (Título encontrado)
-        gbc.gridx = 0; gbc.gridy = 4;
-        add(new JLabel("Livro Selecionado:"), gbc);
-
-        lblTituloLivro = new JLabel("[Nenhum livro selecionado]");
+        gbc.gridx = 0; gbc.gridy = 3; painelForm.add(new JLabel("Título:"), gbc);
+        lblTituloLivro = new JLabel("---");
         lblTituloLivro.setFont(new Font("Arial", Font.BOLD, 14));
-        lblTituloLivro.setForeground(Color.DARK_GRAY);
-        gbc.gridx = 1;
-        add(lblTituloLivro, gbc);
+        gbc.gridx = 1; painelForm.add(lblTituloLivro, gbc);
 
-        // 5. Status do Estoque
-        lblStatusLivro = new JLabel("");
-        gbc.gridx = 1; gbc.gridy = 5;
-        add(lblStatusLivro, gbc);
+        gbc.gridx = 0; gbc.gridy = 4; painelForm.add(new JLabel("Status:"), gbc);
+        lblStatusExemplar = new JLabel("---");
+        gbc.gridx = 1; painelForm.add(lblStatusExemplar, gbc);
 
-        // --- BOTÕES DE AÇÃO ---
-        JPanel painelBotoes = new JPanel();
-        btnConfirmar = new JButton("CONFIRMAR EMPRÉSTIMO");
-        btnConfirmar.setBackground(new Color(100, 200, 100));
+        // 3. Prazo
+        gbc.gridx = 0; gbc.gridy = 5; painelForm.add(new JLabel("Prazo (Dias):"), gbc);
+        spnDiasPrazo = new JSpinner(new SpinnerNumberModel(7, 1, 60, 1));
+        gbc.gridx = 1; painelForm.add(spnDiasPrazo, gbc);
+
+        // Botões
+        JPanel pBotoes = new JPanel();
+        btnConfirmar = new JButton("CONFIRMAR");
+        btnConfirmar.setBackground(new Color(0, 100, 0));
         btnConfirmar.setForeground(Color.WHITE);
-        btnConfirmar.setFont(new Font("Arial", Font.BOLD, 12));
-        btnConfirmar.setEnabled(false); // Só habilita se buscar aluno e livro
-
+        btnConfirmar.setEnabled(false);
         btnCancelar = new JButton("Cancelar");
-
-        painelBotoes.add(btnConfirmar);
-        painelBotoes.add(btnCancelar);
+        pBotoes.add(btnConfirmar);
+        pBotoes.add(btnCancelar);
 
         gbc.gridx = 0; gbc.gridy = 6; gbc.gridwidth = 2;
-        gbc.anchor = GridBagConstraints.CENTER;
-        add(painelBotoes, gbc);
+        painelForm.add(pBotoes, gbc);
+
+        add(painelForm, BorderLayout.CENTER);
+
+        // --- PAINEL LATERAL (Situação do Aluno) ---
+        JPanel painelLateral = new JPanel(new BorderLayout());
+        painelLateral.setBorder(BorderFactory.createTitledBorder(null, "Situação do Aluno", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, new Font("Arial", Font.BOLD, 12), Color.DARK_GRAY));
+        painelLateral.setPreferredSize(new Dimension(280, 0));
+        painelLateral.setBackground(new Color(245, 245, 245));
+
+        txtInfoAluno = new JTextArea();
+        txtInfoAluno.setEditable(false);
+        txtInfoAluno.setMargin(new Insets(10, 10, 10, 10));
+        txtInfoAluno.setFont(new Font("Monospaced", Font.PLAIN, 12));
+        txtInfoAluno.setText("Busque um aluno para\nver seus empréstimos\ne reservas.");
+
+        painelLateral.add(new JScrollPane(txtInfoAluno), BorderLayout.CENTER);
+        add(painelLateral, BorderLayout.EAST);
 
         // --- EVENTOS ---
-        configurarEventos();
-    }
-
-    private void configurarEventos() {
-
-        // Botão Buscar Aluno
         btnBuscarAluno.addActionListener(e -> buscarAluno());
-
-        // Botão Buscar Livro
-        btnBuscarLivro.addActionListener(e -> buscarLivro());
-
-        // Botão Confirmar
+        btnBuscarExemplar.addActionListener(e -> buscarExemplar());
         btnConfirmar.addActionListener(e -> realizarEmprestimo());
-
-        // Botão Cancelar
         btnCancelar.addActionListener(e -> dispose());
     }
 
@@ -164,89 +151,113 @@ public class TelaRealizarEmprestimo extends JFrame {
         if (usuario != null && usuario instanceof Aluno) {
             alunoSelecionado = (Aluno) usuario;
             lblNomeAluno.setText(alunoSelecionado.getNome());
-            lblNomeAluno.setForeground(new Color(0, 100, 0)); // Verde
-            verificarHabilitarBotao();
+            atualizarPainelLateral(); // Atualiza a info lateral
         } else {
             alunoSelecionado = null;
-            lblNomeAluno.setText("Aluno não encontrado ou não é aluno.");
-            lblNomeAluno.setForeground(Color.RED);
-            btnConfirmar.setEnabled(false);
+            lblNomeAluno.setText("Aluno não encontrado.");
+            txtInfoAluno.setText("Aluno não encontrado.");
         }
+        verificarHabilitarBotao();
     }
 
-    private void buscarLivro() {
-        String idTexto = txtIdLivro.getText().trim();
-        if (idTexto.isEmpty()) return;
+    private void atualizarPainelLateral() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("ALUNO: ").append(alunoSelecionado.getNome()).append("\n");
+        sb.append("---------------------------\n");
+
+        // 1. Buscar Empréstimos Ativos
+        List<Emprestimo> ativos = emprestimoService.buscarHistoricoAluno(alunoSelecionado);
+        sb.append("EMPRÉSTIMOS ATIVOS:\n");
+        boolean temAtivos = false;
+        for (Emprestimo e : ativos) {
+            if (e.isAberto()) {
+                sb.append("[ID ").append(e.getExemplar().getId()).append("] ")
+                        .append(e.getExemplar().getLivro().getTitulo())
+                        .append("\n   Devolução: ").append(e.getDataDevolucaoPrevista())
+                        .append(e.isAtrasado() ? " (ATRASADO!)" : "")
+                        .append("\n\n");
+                temAtivos = true;
+            }
+        }
+        if (!temAtivos) sb.append(" (Nenhum)\n\n");
+
+        // 2. Buscar Reservas (Programa de Leitura)
+        sb.append("---------------------------\n");
+        sb.append("RESERVAS (Programa):\n");
+        try {
+            Exemplar reservado = programaService.buscarReservaParaAluno(alunoSelecionado);
+            if (reservado != null) {
+                sb.append("★ ").append(reservado.getLivro().getTitulo())
+                        .append("\n   EXEMPLAR RESERVADO: #").append(reservado.getId())
+                        .append("\n   (Disponível para retirada)");
+            } else {
+                sb.append(" (Nenhuma reserva ativa)");
+            }
+        } catch (Exception e) {
+            sb.append("Erro ao buscar reservas.");
+        }
+
+        txtInfoAluno.setText(sb.toString());
+        // Rola para o topo
+        txtInfoAluno.setCaretPosition(0);
+    }
+
+    private void buscarExemplar() {
+        String textoId = txtIdExemplar.getText().trim();
+        if (textoId.isEmpty()) return;
 
         try {
-            long id = Long.parseLong(idTexto);
-            Livro livro = livroService.buscarPorId(id);
+            long id = Long.parseLong(textoId);
+            Exemplar ex = exemplarDAO.buscarPorId(id);
 
-            if (livro != null) {
-                livroSelecionado = livro;
-                lblTituloLivro.setText(livro.getTitulo());
-                lblTituloLivro.setForeground(new Color(0, 100, 0)); // Verde
+            if (ex != null) {
+                exemplarSelecionado = ex;
+                lblTituloLivro.setText(ex.getLivro().getTitulo());
 
-                // Mostra status do estoque
-                int disponiveis = livro.getCopiasDisponiveis();
-                if (disponiveis > 0) {
-                    lblStatusLivro.setText("Disponível: " + disponiveis + " cópias");
-                    lblStatusLivro.setForeground(new Color(0, 100, 0));
+                if (!ex.isDisponivel()) {
+                    lblStatusExemplar.setText("INDISPONÍVEL (Emprestado)");
+                    lblStatusExemplar.setForeground(Color.RED);
+                } else if (ex.isReservado()) {
+                    // Se está reservado, avisa, mas o sistema pode deixar passar
+                    // SE for para o aluno correto (validado no Service ou visualmente aqui)
+                    lblStatusExemplar.setText("RESERVADO (Verifique Aluno)");
+                    lblStatusExemplar.setForeground(Color.ORANGE);
                 } else {
-                    lblStatusLivro.setText("INDISPONÍVEL (0 cópias)");
-                    lblStatusLivro.setForeground(Color.RED);
-                    livroSelecionado = null; // Impede selecionar livro sem estoque
+                    lblStatusExemplar.setText("Disponível");
+                    lblStatusExemplar.setForeground(new Color(0, 100, 0));
                 }
-
-                verificarHabilitarBotao();
-
             } else {
-                livroSelecionado = null;
-                lblTituloLivro.setText("Livro não encontrado (ID inválido).");
-                lblTituloLivro.setForeground(Color.RED);
-                lblStatusLivro.setText("");
-                btnConfirmar.setEnabled(false);
+                exemplarSelecionado = null;
+                lblTituloLivro.setText("Não encontrado.");
+                lblStatusExemplar.setText("---");
             }
         } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(this, "O ID do livro deve ser um número.");
+            JOptionPane.showMessageDialog(this, "ID inválido.");
         }
+        verificarHabilitarBotao();
     }
 
     private void verificarHabilitarBotao() {
-        // Só libera o botão confirmar se ambos estiverem carregados
-        btnConfirmar.setEnabled(alunoSelecionado != null && livroSelecionado != null);
+        btnConfirmar.setEnabled(alunoSelecionado != null && exemplarSelecionado != null);
     }
 
     private void realizarEmprestimo() {
         try {
-            // Chama o Service que baixa estoque, salva histórico
-            emprestimoService.registrarEmprestimo(alunoSelecionado, livroSelecionado);
+            int dias = (int) spnDiasPrazo.getValue();
+            emprestimoService.registrarEmprestimo(alunoSelecionado, exemplarSelecionado, dias);
+            JOptionPane.showMessageDialog(this, "Empréstimo realizado!");
 
-            JOptionPane.showMessageDialog(this,
-                    "Empréstimo realizado com sucesso!\n" +
-                            "Aluno: " + alunoSelecionado.getNome() + "\n" +
-                            "Livro: " + livroSelecionado.getTitulo() + "\n" +
-                            "Devolução prevista em 7 dias.");
+            // Limpa e reseta
+            txtIdExemplar.setText("");
+            lblTituloLivro.setText("---");
+            lblStatusExemplar.setText("---");
+            exemplarSelecionado = null;
 
-            // Limpa a tela para o próximo
-            limparTela();
+            // Atualiza painel lateral para mostrar o novo empréstimo
+            atualizarPainelLateral();
 
         } catch (ValidacaoException ex) {
-            JOptionPane.showMessageDialog(this, ex.getMessage(), "Erro ao Emprestar", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Erro", JOptionPane.WARNING_MESSAGE);
         }
-    }
-
-    private void limparTela() {
-        txtMatriculaAluno.setText("");
-        txtIdLivro.setText("");
-        lblNomeAluno.setText("[Nenhum aluno selecionado]");
-        lblNomeAluno.setForeground(Color.DARK_GRAY);
-        lblTituloLivro.setText("[Nenhum livro selecionado]");
-        lblTituloLivro.setForeground(Color.DARK_GRAY);
-        lblStatusLivro.setText("");
-
-        alunoSelecionado = null;
-        livroSelecionado = null;
-        btnConfirmar.setEnabled(false);
     }
 }

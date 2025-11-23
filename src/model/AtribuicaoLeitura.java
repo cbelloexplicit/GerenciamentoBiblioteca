@@ -1,32 +1,36 @@
 package model;
 
-    public class AtribuicaoLeitura {
-        private Aluno aluno;
-        private Livro livro;
+public class AtribuicaoLeitura {
+    private Aluno aluno;
+    private Exemplar exemplar; // Mudou de Livro para Exemplar
 
-        public AtribuicaoLeitura(Aluno aluno, Livro livro) {
-            this.aluno = aluno;
-            this.livro = livro;
-        }
+    public AtribuicaoLeitura(Aluno aluno, Exemplar exemplar) {
+        this.aluno = aluno;
+        this.exemplar = exemplar;
+    }
 
-        public Aluno getAluno() {
-            return aluno;
-        }
+    public Aluno getAluno() {
+        return aluno;
+    }
 
-        public void setAluno(Aluno aluno) {
-            this.aluno = aluno;
-        }
+    public void setAluno(Aluno aluno) {
+        this.aluno = aluno;
+    }
 
-        public Livro getLivro() {
-            return livro;
-        }
+    public Exemplar getExemplar() {
+        return exemplar;
+    }
 
-        public void setLivro(Livro livro) {
-            this.livro = livro;
-        }
+    public void setExemplar(Exemplar exemplar) {
+        this.exemplar = exemplar;
+    }
 
-        @Override
-        public String toString() {
-            return aluno.getNome() + " -> " + (livro != null ? livro.getTitulo() : "SEM LIVRO DISPONÍVEL");
+    @Override
+    public String toString() {
+        if (exemplar != null) {
+            return aluno.getNome() + " -> " + exemplar.getLivro().getTitulo() + " (Exemplar #" + exemplar.getId() + ")";
+        } else {
+            return aluno.getNome() + " -> SEM LIVRO";
         }
     }
+}

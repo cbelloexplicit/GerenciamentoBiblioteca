@@ -2,7 +2,7 @@ package persistence;
 
 import model.Aluno;
 import model.Emprestimo;
-import model.Livro;
+import model.Exemplar;
 import model.Usuario;
 
 import java.time.LocalDate;
@@ -21,47 +21,53 @@ public class EmprestimoDAO {
         if (!linhas.isEmpty()) {
             carregarDoArquivo(linhas);
         } else {
-            System.out.println("Arquivo de empréstimos vazio ou inexistente.");
+            System.out.println("Arquivo de empréstimos vazio ou inexistente. Criando novo banco.");
         }
     }
 
     // --- LÓGICA DE CARREGAR (CSV -> OBJETO) ---
     private static void carregarDoArquivo(List<String> linhas) {
         UsuarioDAO usuarioDAO = new UsuarioDAO();
-        LivroDAO livroDAO = new LivroDAO();
+        // Necessário ter criado a classe ExemplarDAO conforme o plano anterior
+        ExemplarDAO exemplarDAO = new ExemplarDAO();
 
         long maiorId = 0;
 
         for (String linha : linhas) {
             try {
+                if (linha.trim().isEmpty()) continue;
+
                 String[] dados = linha.split(";");
-                // Layout: id;id_aluno;id_livro;data_emp;data_prev;data_real
+                // Layout NOVO: id;id_aluno;id_exemplar;data_emp;data_prev;data_real
 
                 long id = Long.parseLong(dados[0]);
                 long idAluno = Long.parseLong(dados[1]);
-                long idLivro = Long.parseLong(dados[2]);
+                long idExemplar = Long.parseLong(dados[2]); // Agora lemos o Exemplar
+
                 LocalDate dataEmp = LocalDate.parse(dados[3]);
                 LocalDate dataPrev = LocalDate.parse(dados[4]);
 
                 LocalDate dataReal = null;
-                if (!dados[5].equals("null")) {
+                if (dados.length > 5 && !dados[5].equals("null") && !dados[5].isEmpty()) {
                     dataReal = LocalDate.parse(dados[5]);
                 }
 
                 // Reconstrói as dependências
                 Usuario u = usuarioDAO.buscarPorId(idAluno);
-                Livro l = livroDAO.buscarPorId(idLivro);
+                Exemplar exemplar = exemplarDAO.buscarPorId(idExemplar);
 
-                // Só cria se o aluno e o livro existirem (Integridade Referencial)
-                if (u instanceof Aluno && l != null) {
-                    Emprestimo e = new Emprestimo(id, (Aluno) u, l, dataEmp, dataPrev, dataReal);
+                // Só cria se o aluno e o exemplar existirem (Integridade Referencial)
+                if (u instanceof Aluno && exemplar != null) {
+                    Emprestimo e = new Emprestimo(id, (Aluno) u, exemplar, dataEmp, dataPrev, dataReal);
                     bancoEmprestimos.add(e);
 
                     if (id > maiorId) maiorId = id;
+                } else {
+                    System.err.println("Aviso: Empréstimo ID " + id + " ignorado. Aluno ou Exemplar não encontrados.");
                 }
 
             } catch (Exception e) {
-                System.err.println("Erro ao ler linha de empréstimo: " + linha);
+                System.err.println("Erro ao ler linha de empréstimo: " + linha + " | Erro: " + e.getMessage());
             }
         }
         proximoId = maiorId + 1;
@@ -74,10 +80,10 @@ public class EmprestimoDAO {
         for (Emprestimo e : bancoEmprestimos) {
             StringBuilder sb = new StringBuilder();
 
-            // Layout: id;id_aluno;id_livro;data_emp;data_prev;data_real
+            // Layout NOVO: id;id_aluno;id_exemplar;data_emp;data_prev;data_real
             sb.append(e.getId()).append(";")
                     .append(e.getAluno().getId()).append(";")
-                    .append(e.getLivro().getId()).append(";")
+                    .append(e.getExemplar().getId()).append(";") // Salva ID do Exemplar
                     .append(e.getDataEmprestimo()).append(";")
                     .append(e.getDataDevolucaoPrevista()).append(";");
 
@@ -148,14 +154,31 @@ public class EmprestimoDAO {
         return doAluno;
     }
 
+    /**
+     * Busca empréstimos vinculados a um Livro genérico.
+     * Útil para saber o histórico de "Harry Potter" independentemente de qual cópia física foi usada.
+     */
     public List<Emprestimo> buscarPorLivro(long idLivro) {
         List<Emprestimo> doLivro = new ArrayList<>();
         for (Emprestimo e : bancoEmprestimos) {
-            if (e.getLivro().getId() == idLivro) {
+            // Navega: Emprestimo -> Exemplar -> Livro -> ID
+            if (e.getExemplar().getLivro().getId() == idLivro) {
                 doLivro.add(e);
             }
         }
         return doLivro;
     }
-}
 
+    /**
+     * Busca empréstimos de um Exemplar físico específico (código de barras).
+     */
+    public List<Emprestimo> buscarPorExemplar(long idExemplar) {
+        List<Emprestimo> doExemplar = new ArrayList<>();
+        for (Emprestimo e : bancoEmprestimos) {
+            if (e.getExemplar().getId() == idExemplar) {
+                doExemplar.add(e);
+            }
+        }
+        return doExemplar;
+    }
+}

@@ -5,24 +5,24 @@ import java.time.LocalDate;
 public class Emprestimo {
     private long id;
     private Aluno aluno;  // quem pegou
-    private Livro livro;  // o que pegou
+    private Exemplar exemplar;  // o que pegou
     private LocalDate dataEmprestimo;
     private LocalDate dataDevolucaoPrevista;
     private LocalDate dataDevolucaoReal; // NULL se ainda não foi devolvido
 
-    public Emprestimo(Aluno aluno, Livro livro, LocalDate dataEmprestimo, int diasParaDevolucao) {
+    public Emprestimo(Aluno aluno, Exemplar exemplar, LocalDate dataEmprestimo, int diasParaDevolucao) {
         this.aluno = aluno;
-        this.livro = livro;
+        this.exemplar = exemplar;
         this.dataEmprestimo = dataEmprestimo;
         this.dataDevolucaoPrevista = dataEmprestimo.plusDays(diasParaDevolucao);
         this.dataDevolucaoReal = null; // Está em aberto
     }
 
     // Construtor completo
-    public Emprestimo(long id, Aluno aluno, Livro livro, LocalDate dataEmp, LocalDate dataPrev, LocalDate dataReal) {
+    public Emprestimo(long id, Aluno aluno, Exemplar exemplar, LocalDate dataEmp, LocalDate dataPrev, LocalDate dataReal) {
         this.id = id;
         this.aluno = aluno;
-        this.livro = livro;
+        this.exemplar = exemplar;
         this.dataEmprestimo = dataEmp;
         this.dataDevolucaoPrevista = dataPrev;
         this.dataDevolucaoReal = dataReal;
@@ -57,13 +57,8 @@ public class Emprestimo {
         this.aluno = aluno;
     }
 
-    public Livro getLivro() {
-        return livro;
-    }
-
-    public void setLivro(Livro livro) {
-        this.livro = livro;
-    }
+    public Exemplar getExemplar() { return exemplar; }
+    public Livro getLivroInfo() { return exemplar.getLivro(); }
 
     public LocalDate getDataEmprestimo() {
         return dataEmprestimo;
@@ -95,7 +90,7 @@ public class Emprestimo {
         String s = "Emprestimo{" +
                 "id=" + id +
                 ", aluno=" + aluno.getNome() +
-                ", livro=" + livro.getTitulo() +
+                ", livro=" + exemplar.getLivro().getTitulo() +
                 ", dataEmprestimo=" + dataEmprestimo +
                 ", dataDevolucaoPrevista=" + dataDevolucaoPrevista +
                 ", situação= " + status;
@@ -109,7 +104,7 @@ public class Emprestimo {
             return "Emprestimo{" +
                     "id=" + id +
                     ", aluno=" + aluno.getNome() +
-                    ", livro=" + livro.getTitulo() +
+                    ", livro=" + exemplar.getLivro().getTitulo() +
                     ", dataEmprestimo=" + dataEmprestimo +
                     ", dataDevolucaoPrevista=" + dataDevolucaoPrevista +
                     ", dataDevolucaoReal=" + dataDevolucaoReal +

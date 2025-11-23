@@ -1,7 +1,9 @@
 package view;
 
+import model.Exemplar;
 import model.Livro;
 import Service.LivroService;
+import persistence.ExemplarDAO;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -17,9 +19,12 @@ public class TelaPesquisaLivro extends JFrame {
     private DefaultTableModel modeloTabela;
 
     private LivroService livroService;
+    private ExemplarDAO exemplarDAO; // NOVO: Necessário para ver disponibilidade
 
     public TelaPesquisaLivro() {
         this.livroService = new LivroService();
+        this.exemplarDAO = new ExemplarDAO(); // Inicializa o DAO
+
         configurarJanela();
         inicializarComponentes();
         carregarTabela(); // Já carrega tudo ao abrir
@@ -44,7 +49,7 @@ public class TelaPesquisaLivro extends JFrame {
         painelNorte.add(txtBusca);
 
         btnBuscar = new JButton("Pesquisar");
-        btnBuscar.setBackground(new Color(70, 130, 180));
+        btnBuscar.setBackground(new Color(70, 130, 180)); // Azul aço
         btnBuscar.setForeground(Color.WHITE);
 
         btnLimpar = new JButton("Limpar / Ver Todos");
@@ -55,7 +60,7 @@ public class TelaPesquisaLivro extends JFrame {
         add(painelNorte, BorderLayout.NORTH);
 
         // --- 2. TABELA DE RESULTADOS (Centro) ---
-        String[] colunas = {"Título", "Autor", "Gênero", "Status (Estoque)"};
+        String[] colunas = {"Título", "Autor", "Gênero", "Status (Disp. / Total)"};
 
         modeloTabela = new DefaultTableModel(colunas, 0) {
             @Override // Aluno não pode editar nada
@@ -73,7 +78,7 @@ public class TelaPesquisaLivro extends JFrame {
         add(new JScrollPane(tabelaLivros), BorderLayout.CENTER);
 
         // --- 3. RODAPÉ (Info) ---
-        JLabel lblDica = new JLabel(" * Para pegar um livro emprestado, anote o Título e procure o bibliotecário.");
+        JLabel lblDica = new JLabel(" * Para pegar um livro emprestado, anote o Título e peça ao bibliotecário.");
         lblDica.setBorder(BorderFactory.createEmptyBorder(5, 10, 10, 10));
         lblDica.setFont(new Font("Arial", Font.ITALIC, 12));
         add(lblDica, BorderLayout.SOUTH);
@@ -106,14 +111,11 @@ public class TelaPesquisaLivro extends JFrame {
         // 1. Tenta buscar pelo Título
         List<Livro> resultados = livroService.buscarPorTitulo(termo);
 
-        // 2. Se a lista veio vazia, tenta buscar pelo Autor
-        if (resultados.isEmpty()) {
-            resultados = livroService.buscarPorAutor(termo);
-        }
-        //termo traz titulos com o termo e autores:
+        // 2. Se a lista veio vazia ou para complementar, busca por Autor
         List<Livro> porAutor = livroService.buscarPorAutor(termo);
+
+        // Junta os resultados sem duplicar
         for (Livro l : porAutor) {
-            // Verifica se o livro já não está na lista para não duplicar (pelo ID)
             boolean jaExiste = resultados.stream().anyMatch(r -> r.getId() == l.getId());
             if (!jaExiste) {
                 resultados.add(l);
@@ -131,12 +133,22 @@ public class TelaPesquisaLivro extends JFrame {
         modeloTabela.setRowCount(0);
 
         for (Livro l : lista) {
-            // Lógica visual de status
+            // Lógica NOVA: Consulta o ExemplarDAO
+            // Busca quantos estão disponíveis (não emprestados, não reservados)
+            List<Exemplar> disponiveis = exemplarDAO.buscarDisponiveisPorLivro(l.getId());
+            // Busca o total físico que a biblioteca tem
+            List<Exemplar> totalFisico = exemplarDAO.buscarPorLivro(l.getId());
+
             String status;
-            if (l.getCopiasDisponiveis() > 0) {
-                status = "Disponível (" + l.getCopiasDisponiveis() + ")";
+            int qtdDisp = disponiveis.size();
+            int qtdTotal = totalFisico.size();
+
+            if (qtdDisp > 0) {
+                status = "Disponível (" + qtdDisp + " / " + qtdTotal + ")";
+            } else if (qtdTotal == 0) {
+                status = "SEM ACERVO"; // Livro cadastrado mas sem exemplares criados
             } else {
-                status = "INDISPONÍVEL";
+                status = "INDISPONÍVEL"; // Tem exemplares, mas todos emprestados/reservados
             }
 
             modeloTabela.addRow(new Object[]{

@@ -49,7 +49,7 @@ public class TelaMinhasTurmas extends JFrame {
 
     private void configurarJanela() {
         setTitle("Minhas Turmas e Leituras - Prof. " + professorLogado.getNome());
-        setSize(900, 600);
+        setSize(950, 600); // Ligeiramente mais largo para caber o título + ID
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout(10, 10));
@@ -84,8 +84,8 @@ public class TelaMinhasTurmas extends JFrame {
 
         painelDireito.add(painelInfo, BorderLayout.NORTH);
 
-        // Tabela com nova coluna "Leitura Atual"
-        String[] colunas = {"Matrícula", "Nome do Aluno", "Idade", "Leitura Atual (Programa)"};
+        // Tabela
+        String[] colunas = {"Matrícula", "Nome do Aluno", "Idade", "Leitura Atribuída (Exemplar)"};
 
         modeloTabelaAlunos = new DefaultTableModel(colunas, 0) {
             @Override
@@ -94,9 +94,12 @@ public class TelaMinhasTurmas extends JFrame {
 
         tabelaAlunos = new JTable(modeloTabelaAlunos);
         tabelaAlunos.setRowHeight(25);
-        // Ajusta largura das colunas
-        tabelaAlunos.getColumnModel().getColumn(1).setPreferredWidth(200);
-        tabelaAlunos.getColumnModel().getColumn(3).setPreferredWidth(250);
+
+        // Ajuste largura das colunas
+        tabelaAlunos.getColumnModel().getColumn(0).setPreferredWidth(100); // Matrícula
+        tabelaAlunos.getColumnModel().getColumn(1).setPreferredWidth(250); // Nome
+        tabelaAlunos.getColumnModel().getColumn(2).setPreferredWidth(60);  // Idade
+        tabelaAlunos.getColumnModel().getColumn(3).setPreferredWidth(300); // Livro
 
         painelDireito.add(new JScrollPane(tabelaAlunos), BorderLayout.CENTER);
 
@@ -129,7 +132,6 @@ public class TelaMinhasTurmas extends JFrame {
         List<Aluno> alunos = turma.getAlunos();
 
         // 1. Busca o Programa de Leitura ATIVO para esta turma
-        // (Para saber qual livro cada um tem que ler)
         Map<Long, String> mapaLeituras = buscarLeiturasDaTurma(turma);
 
         if (alunos.isEmpty()) {
@@ -150,13 +152,13 @@ public class TelaMinhasTurmas extends JFrame {
                         a.getMatricula(),
                         a.getNome(),
                         idadeStr,
-                        livroAtribuido // Mostra o livro aqui!
+                        livroAtribuido // Mostra Título + ID Exemplar
                 });
             }
         }
     }
 
-    //Varre os programas de leitura, acha o ativo para essa turma
+    // Varre os programas de leitura, acha o ativo para essa turma e mapeia Aluno -> Título Livro
     private Map<Long, String> buscarLeiturasDaTurma(Turma turma) {
         Map<Long, String> mapa = new HashMap<>();
         List<ProgramaLeitura> programas = programaDAO.buscarPorTurma(turma.getId());
@@ -175,12 +177,16 @@ public class TelaMinhasTurmas extends JFrame {
             lblProgramaAtivo.setText("Projeto Ativo: " + programaAtivo.getTitulo() +
                     " (Até " + programaAtivo.getDataFim() + ")");
 
-            // Mapeia: Para cada atribuição, guarda "ID Aluno" -> "Título Livro"
+            // Mapeia: Para cada atribuição, guarda "ID Aluno" -> "Título Livro (#ID)"
             for (AtribuicaoLeitura at : programaAtivo.getAtribuicoes()) {
-                if (at.getLivro() != null) {
-                    mapa.put(at.getAluno().getId(), at.getLivro().getTitulo());
+
+                // MUDANÇA: Verifica getExemplar() em vez de getLivro()
+                if (at.getExemplar() != null) {
+                    String info = at.getExemplar().getLivro().getTitulo() +
+                            " (Exemplar #" + at.getExemplar().getId() + ")";
+                    mapa.put(at.getAluno().getId(), info);
                 } else {
-                    mapa.put(at.getAluno().getId(), "(Sem livro atribuído)");
+                    mapa.put(at.getAluno().getId(), "(Sem exemplar atribuído)");
                 }
             }
         } else {
