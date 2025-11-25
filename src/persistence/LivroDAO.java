@@ -29,7 +29,7 @@ public class LivroDAO {
                 if (linha.trim().isEmpty()) continue;
 
                 String[] dados = linha.split(";");
-                // Layout NOVO: id;titulo;autor;id_genero;idade_min
+                // Layout: id;titulo;autor;id_genero;idade_min
 
                 long id = Long.parseLong(dados[0]);
                 String titulo = dados[1];
@@ -57,7 +57,7 @@ public class LivroDAO {
         List<String> linhas = new ArrayList<>();
         for (Livro l : bancoLivros) {
             StringBuilder sb = new StringBuilder();
-            // Layout NOVO: id;titulo;autor;id_genero;idade_min
+            // Layout: id;titulo;autor;id_genero;idade_min
             sb.append(l.getId()).append(";")
                     .append(l.getTitulo()).append(";")
                     .append(l.getAutor()).append(";")

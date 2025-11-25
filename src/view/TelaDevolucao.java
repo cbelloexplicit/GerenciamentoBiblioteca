@@ -15,7 +15,7 @@ import java.util.List;
 public class TelaDevolucao extends JFrame {
 
     // Componentes
-    private JTextField txtBuscaId; // Renomeado para ser genérico
+    private JTextField txtBuscaId;
     private JButton btnBuscar;
 
     // Painel de Detalhes
@@ -169,7 +169,7 @@ public class TelaDevolucao extends JFrame {
                 JOptionPane.showMessageDialog(this, "Nenhum empréstimo encontrado com ID " + idBusca + " (nem Exemplar, nem Livro).");
             }
             else if (candidatos.size() == 1) {
-                // Sorte! Só tem uma cópia desse livro emprestada.
+                // Só tem uma cópia desse livro emprestada.
                 preencherTela(candidatos.get(0));
             }
             else {

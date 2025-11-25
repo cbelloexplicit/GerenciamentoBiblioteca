@@ -68,7 +68,6 @@ public class TurmaService {
         }
 
         // Regra de Integridade: Não apagar turma se houver alunos vinculados a ela
-        // Precisamos verificar se algum aluno tem essa turma no seu cadastro
         List<Usuario> alunos = usuarioDAO.listarApenasAlunos();
         for (Usuario u : alunos) {
             Aluno aluno = (Aluno) u;
@@ -83,7 +82,6 @@ public class TurmaService {
     }
 
     //CARREGAR ALUNOS DA TURMA
-    //A classe Turma tem uma List<Aluno>, mas ela não é salva no CSV da turma.
     public Turma carregarAlunos(Turma turma) {
         if (turma == null) return null;
 

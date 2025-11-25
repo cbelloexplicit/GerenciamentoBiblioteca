@@ -53,10 +53,6 @@ public class UsuarioService {
             }
         }
 
-        // --- CORREÇÃO AQUI ---
-        // A lógica de salvar e registrar log deve ficar FORA do if (usuario instanceof Aluno)
-        // para funcionar para Professores, Admins e Bibliotecários também.
-
         boolean novo = (usuario.getId() == 0);
         usuarioDAO.salvar(usuario);
 
@@ -97,7 +93,7 @@ public class UsuarioService {
         }
     }
 
-    // Métodos de Consulta e Auxiliares (mantidos iguais)
+    // Métodos de Consulta e Auxiliares
     public List<Usuario> listarTodos() { return usuarioDAO.listarTodos(); }
     public List<Usuario> listarApenasAlunos() { return usuarioDAO.listarApenasAlunos(); }
     public List<Usuario> listarApenasAdmin() { return usuarioDAO.listarApenasAdmin(); }

@@ -63,7 +63,7 @@ public class TelaGerenciarUsuarios extends JFrame {
         tabelaUsuarios.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         add(new JScrollPane(tabelaUsuarios), BorderLayout.CENTER);
 
-        // --- SUL: Botões de Ação ---
+        // --- SUL: Botões ---
         JPanel painelBotoes = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 
         btnNovo = new JButton("Novo Usuário");
@@ -83,11 +83,9 @@ public class TelaGerenciarUsuarios extends JFrame {
 
         // --- EVENTOS ---
 
-        // 1. Botão Novo (Abre a tela de cadastro que já fizemos)
         btnNovo.addActionListener(e -> {
             TelaCadastroUsuario telaCad = new TelaCadastroUsuario();
             telaCad.setVisible(true);
-            // Quando fechar o cadastro, atualiza a lista
             telaCad.addWindowListener(new WindowAdapter() {
                 @Override
                 public void windowClosed(WindowEvent e) {
@@ -96,13 +94,10 @@ public class TelaGerenciarUsuarios extends JFrame {
             });
         });
 
-        // 2. Botão Excluir
         btnExcluir.addActionListener(e -> excluirUsuario());
 
-        // 3. Botão Desativar
         btnToggleAtivo.addActionListener(e -> alternarStatus());
 
-        // 4. Buscar e Recarregar
         btnRecarregar.addActionListener(e -> carregarTabela());
         btnBuscar.addActionListener(e -> buscarUsuario());
     }

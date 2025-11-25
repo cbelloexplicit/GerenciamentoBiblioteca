@@ -19,12 +19,11 @@ public class DialogoSelecionarLivro extends JDialog {
     private DefaultTableModel modelo;
 
     private LivroService livroService;
-    private ExemplarDAO exemplarDAO; // NOVO: Para consultar estoque
+    private ExemplarDAO exemplarDAO;
 
-    // O livro que foi escolhido
     private Livro livroSelecionado = null;
 
-    public DialogoSelecionarLivro(Dialog owner) { // Alterado para Dialog para funcionar sobre modais
+    public DialogoSelecionarLivro(Dialog owner) {
         super(owner, "Selecionar Título", true);
         init();
     }
@@ -105,7 +104,6 @@ public class DialogoSelecionarLivro extends JDialog {
 
         modelo.setRowCount(0);
         for (Livro l : lista) {
-            // LÓGICA NOVA: Consulta o ExemplarDAO
             List<Exemplar> disponiveis = exemplarDAO.buscarDisponiveisPorLivro(l.getId());
             List<Exemplar> total = exemplarDAO.buscarPorLivro(l.getId());
 

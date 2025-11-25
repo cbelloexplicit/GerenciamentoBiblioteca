@@ -12,7 +12,7 @@ public class ExemplarDAO {
     private static List<Exemplar> bancoExemplares = new ArrayList<>();
     private static long proximoId = 1;
 
-    // --- CARGA INICIAL (Estático) ---
+    // --- CARGA INICIAL ---
     static {
         List<String> linhas = CsvUtil.lerArquivo(ARQUIVO);
         if (!linhas.isEmpty()) {
@@ -39,7 +39,7 @@ public class ExemplarDAO {
                 boolean disponivel = Boolean.parseBoolean(dados[2]);
                 boolean reservado = Boolean.parseBoolean(dados[3]);
 
-                // Busca o Livro (metadados)
+                // Busca o Livro
                 Livro livro = livroDAO.buscarPorId(idLivro);
 
                 if (livro != null) {
@@ -89,8 +89,8 @@ public class ExemplarDAO {
         bancoExemplares.add(exemplar);
         salvarEmArquivo(); // Grava no disco
 
-        // Feedback opcional no console
-        // System.out.println("Exemplar ID " + exemplar.getId() + " gravado.");
+        // Feedback no console
+        System.out.println("Exemplar ID " + exemplar.getId() + " gravado.");
     }
 
     public void remover(long id) {
@@ -111,9 +111,8 @@ public class ExemplarDAO {
 
     // --- CONSULTAS ESPECÍFICAS ---
 
-    /**
-     * Busca todos os exemplares físicos de um determinado Título (Livro).
-     */
+    //Busca todos os exemplares físicos de um determinado Título (Livro).
+
     public List<Exemplar> buscarPorLivro(long idLivro) {
         List<Exemplar> resultado = new ArrayList<>();
         for (Exemplar e : bancoExemplares) {
@@ -124,10 +123,8 @@ public class ExemplarDAO {
         return resultado;
     }
 
-    /**
-     * Busca apenas os exemplares que estão disponíveis para empréstimo imediato.
-     * (Não emprestados e não reservados)
-     */
+    //Busca apenas os exemplares que estão disponíveis para empréstimo imediato. (Não emprestados e não reservados)
+
     public List<Exemplar> buscarDisponiveisPorLivro(long idLivro) {
         List<Exemplar> resultado = new ArrayList<>();
         for (Exemplar e : bancoExemplares) {

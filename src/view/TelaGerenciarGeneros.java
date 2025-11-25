@@ -14,8 +14,8 @@ import java.util.List;
 public class TelaGerenciarGeneros extends JFrame {
 
     // Componentes
-    private JTextField txtId;   // Invisível ou Somente Leitura (para controle)
-    private JTextField txtNome; // Campo principal
+    private JTextField txtId;
+    private JTextField txtNome;
     private JTable tabelaGeneros;
     private DefaultTableModel modeloTabela;
 
@@ -49,7 +49,6 @@ public class TelaGerenciarGeneros extends JFrame {
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.anchor = GridBagConstraints.WEST;
 
-        // ID (Apenas visual, desabilitado)
         gbc.gridx = 0; gbc.gridy = 0;
         painelForm.add(new JLabel("ID:"), gbc);
 
@@ -59,14 +58,13 @@ public class TelaGerenciarGeneros extends JFrame {
         gbc.gridx = 1;
         painelForm.add(txtId, gbc);
 
-        // Nome (Agora bem grande e expansível)
         gbc.gridx = 0; gbc.gridy = 1;
         painelForm.add(new JLabel("Nome do Gênero:"), gbc);
 
         txtNome = new JTextField();
-        txtNome.setFont(new Font("Arial", Font.PLAIN, 14)); // Letra maior
+        txtNome.setFont(new Font("Arial", Font.PLAIN, 14));
         gbc.gridx = 1;
-        gbc.fill = GridBagConstraints.HORIZONTAL; // Estica horizontalmente
+        gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1.0; // Ocupa todo espaço sobrando
         painelForm.add(txtNome, gbc);
 

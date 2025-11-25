@@ -10,6 +10,8 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.text.MaskFormatter;
 import java.awt.*;
 import java.time.LocalDate;
+import java.time.Period;
+
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,7 +36,7 @@ public class TelaProgramaLeitura extends JFrame {
     private ProgramaLeituraService programaService;
     private TurmaService turmaService;
     private GeneroService generoService;
-    private ExemplarDAO exemplarDAO; // Necessário para verificar estoque na troca manual
+    private ExemplarDAO exemplarDAO; // p verificar estoque na troca manual
 
     private List<AtribuicaoLeitura> atribuicoesAtuais;
 
@@ -177,10 +179,20 @@ public class TelaProgramaLeitura extends JFrame {
 
             // Carrega os alunos da turma (caso não estejam carregados)
             turmaService.carregarAlunos(turma);
-
+            int count = 0;
+            int total = 0;
+            int idade;
+            for (Aluno a : turma.getAlunos()){
+                LocalDate nasc = a.getDataNascimento();
+                LocalDate today = LocalDate.now();
+                Period age = Period.between(nasc, today);
+                idade = age.getYears();
+                total = total + idade;
+                count++;
+            }
+            int idadeMedia = total/count;
             // Chama o serviço que agora busca EXEMPLARES reais
-            // Idade média hardcoded em 10, pode melhorar depois
-            atribuicoesAtuais = programaService.gerarSugestaoDistribuicao(turma, genero, 10);
+            atribuicoesAtuais = programaService.gerarSugestaoDistribuicao(turma, genero, idadeMedia);
 
             atualizarTabela();
 
@@ -233,7 +245,7 @@ public class TelaProgramaLeitura extends JFrame {
                 return;
             }
 
-            // Pega o primeiro disponível (Logística Simplificada)
+            // Pega o primeiro disponível
             Exemplar novoExemplar = disponiveis.get(0);
 
             // 3. Atualiza a Lista Lógica e Visual

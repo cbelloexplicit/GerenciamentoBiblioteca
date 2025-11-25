@@ -15,11 +15,9 @@ public class TelaCadastroLivro extends JFrame {
     // Componentes
     private JTextField txtTitulo;
     private JTextField txtAutor;
-    private JComboBox<Genero> cmbGenero; // Caixa de seleção
-    private JSpinner spnIdade; // Campo numérico com setinhas
+    private JComboBox<Genero> cmbGenero;
+    private JSpinner spnIdade;
 
-    // O campo de cópias foi REMOVIDO daqui.
-    // Agora as cópias são adicionadas na tela "Gerenciar Acervo" -> "Gerenciar Exemplares".
 
     private JButton btnSalvar;
     private JButton btnCancelar;

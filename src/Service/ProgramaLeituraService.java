@@ -44,7 +44,6 @@ public class ProgramaLeituraService {
         }
 
         // 2. Buscar o 'Pool' de Exemplares Disponíveis
-        // Estratégia: Pegar todos os exemplares e filtrar em memória (ou usar método específico no DAO se houver)
         List<Exemplar> todosExemplares = exemplarDAO.listarTodos();
         List<Exemplar> poolDisponivel = new ArrayList<>();
 
@@ -84,7 +83,6 @@ public class ProgramaLeituraService {
                 // O professor terá que resolver manualmente na tela
             }
 
-            // Nota: Certifique-se que sua classe AtribuicaoLeitura foi atualizada para aceitar Exemplar no construtor
             sugestao.add(new AtribuicaoLeitura(aluno, exemplarSorteado));
         }
 
@@ -117,7 +115,7 @@ public class ProgramaLeituraService {
 
         // 3. Processar Exemplares
         for (AtribuicaoLeitura item : programa.getAtribuicoes()) {
-            Exemplar exemplar = item.getExemplar(); // Atualize o getter em AtribuicaoLeitura
+            Exemplar exemplar = item.getExemplar();
             Aluno aluno = item.getAluno();
 
             if (exemplar != null) {

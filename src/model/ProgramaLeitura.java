@@ -50,7 +50,7 @@ public class ProgramaLeitura {
         this.atribuicoes = atribuicoes;
     }
 
-    // --- Getters e Setters (Padrão) ---
+    // --- Getters e Setters ---
 
 
     public long getId() {

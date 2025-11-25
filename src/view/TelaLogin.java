@@ -31,9 +31,7 @@ public class TelaLogin extends JFrame {
         setLocationRelativeTo(null); // Centraliza na tela
         setResizable(false);
 
-        // Define um layout que centraliza o painel de login no meio da janela
         setLayout(new GridBagLayout());
-        // Define uma cor de fundo para a janela (Cinza suave)
         getContentPane().setBackground(new Color(33, 32, 32));
     }
 
@@ -43,19 +41,18 @@ public class TelaLogin extends JFrame {
         painelCaixa.setLayout(new BorderLayout(10, 10));
         painelCaixa.setBackground(new Color(78, 77, 77));
         painelCaixa.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(180, 180, 180), 1), // Borda fina cinza
-                new EmptyBorder(20, 20, 20, 20) // Margem interna (padding)
+                BorderFactory.createLineBorder(new Color(180, 180, 180), 1),
+                new EmptyBorder(20, 20, 20, 20)
         ));
 
         // --- 2. TÍTULO (Topo) ---
         JLabel labelTitulo = new JLabel("Login do Sistema", SwingConstants.CENTER);
         labelTitulo.setFont(new Font("Arial", Font.BOLD, 20));
         labelTitulo.setForeground(Color.WHITE);
-        labelTitulo.setBorder(new EmptyBorder(0, 0, 15, 0)); // Espaço embaixo do título
+        labelTitulo.setBorder(new EmptyBorder(0, 0, 15, 0));
         painelCaixa.add(labelTitulo, BorderLayout.NORTH);
 
         // --- 3. FORMULÁRIO (Centro - Labels e Campos) ---
-        // GridLayout: 2 linhas, 2 colunas, com espaço de 5px entre eles
         JPanel painelForm = new JPanel(new GridLayout(2, 2, 5, 10));
         painelForm.setBackground(new Color(78, 77, 77));
 
@@ -100,7 +97,6 @@ public class TelaLogin extends JFrame {
 
         painelCaixa.add(painelBotoes, BorderLayout.SOUTH);
 
-        // Adiciona a "caixa" pronta na janela principal
         add(painelCaixa);
 
         // --- EVENTOS ---
@@ -126,8 +122,6 @@ public class TelaLogin extends JFrame {
             // Abre o Menu Principal
             MenuPrincipal menu = new MenuPrincipal(usuarioLogado);
             menu.setVisible(true);
-
-            // Fecha esta tela
             this.dispose();
 
         } catch (AutenticacaoException ex) {

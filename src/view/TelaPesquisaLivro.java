@@ -19,15 +19,15 @@ public class TelaPesquisaLivro extends JFrame {
     private DefaultTableModel modeloTabela;
 
     private LivroService livroService;
-    private ExemplarDAO exemplarDAO; // NOVO: Necessário para ver disponibilidade
+    private ExemplarDAO exemplarDAO;
 
     public TelaPesquisaLivro() {
         this.livroService = new LivroService();
-        this.exemplarDAO = new ExemplarDAO(); // Inicializa o DAO
+        this.exemplarDAO = new ExemplarDAO();
 
         configurarJanela();
         inicializarComponentes();
-        carregarTabela(); // Já carrega tudo ao abrir
+        carregarTabela();
     }
 
     private void configurarJanela() {
@@ -39,7 +39,6 @@ public class TelaPesquisaLivro extends JFrame {
     }
 
     private void inicializarComponentes() {
-        // --- 1. PAINEL DE BUSCA (Topo) ---
         JPanel painelNorte = new JPanel(new FlowLayout(FlowLayout.LEFT));
         painelNorte.setBorder(BorderFactory.createEmptyBorder(10, 10, 0, 10));
 
@@ -49,7 +48,7 @@ public class TelaPesquisaLivro extends JFrame {
         painelNorte.add(txtBusca);
 
         btnBuscar = new JButton("Pesquisar");
-        btnBuscar.setBackground(new Color(70, 130, 180)); // Azul aço
+        btnBuscar.setBackground(new Color(70, 130, 180));
         btnBuscar.setForeground(Color.WHITE);
 
         btnLimpar = new JButton("Limpar / Ver Todos");
@@ -59,7 +58,6 @@ public class TelaPesquisaLivro extends JFrame {
 
         add(painelNorte, BorderLayout.NORTH);
 
-        // --- 2. TABELA DE RESULTADOS (Centro) ---
         String[] colunas = {"Título", "Autor", "Gênero", "Status (Disp. / Total)"};
 
         modeloTabela = new DefaultTableModel(colunas, 0) {
@@ -71,26 +69,22 @@ public class TelaPesquisaLivro extends JFrame {
         tabelaLivros.setRowHeight(25);
         tabelaLivros.setFillsViewportHeight(true);
 
-        // Ajuste visual das colunas
-        tabelaLivros.getColumnModel().getColumn(0).setPreferredWidth(250); // Título maior
-        tabelaLivros.getColumnModel().getColumn(3).setPreferredWidth(120); // Status
+        tabelaLivros.getColumnModel().getColumn(0).setPreferredWidth(250);
+        tabelaLivros.getColumnModel().getColumn(3).setPreferredWidth(120);
 
         add(new JScrollPane(tabelaLivros), BorderLayout.CENTER);
 
-        // --- 3. RODAPÉ (Info) ---
         JLabel lblDica = new JLabel(" * Para pegar um livro emprestado, anote o Título e peça ao bibliotecário.");
         lblDica.setBorder(BorderFactory.createEmptyBorder(5, 10, 10, 10));
         lblDica.setFont(new Font("Arial", Font.ITALIC, 12));
         add(lblDica, BorderLayout.SOUTH);
 
-        // --- EVENTOS ---
         btnBuscar.addActionListener(e -> pesquisar());
         btnLimpar.addActionListener(e -> {
             txtBusca.setText("");
             carregarTabela();
         });
 
-        // Permitir apertar ENTER na caixa de busca
         txtBusca.addActionListener(e -> pesquisar());
     }
 
@@ -102,19 +96,15 @@ public class TelaPesquisaLivro extends JFrame {
     private void pesquisar() {
         String termo = txtBusca.getText().trim();
 
-        // Se a busca estiver vazia, mostra tudo (reseta a tabela)
         if (termo.isEmpty()) {
             carregarTabela();
             return;
         }
 
-        // 1. Tenta buscar pelo Título
         List<Livro> resultados = livroService.buscarPorTitulo(termo);
 
-        // 2. Se a lista veio vazia ou para complementar, busca por Autor
         List<Livro> porAutor = livroService.buscarPorAutor(termo);
 
-        // Junta os resultados sem duplicar
         for (Livro l : porAutor) {
             boolean jaExiste = resultados.stream().anyMatch(r -> r.getId() == l.getId());
             if (!jaExiste) {
@@ -133,7 +123,6 @@ public class TelaPesquisaLivro extends JFrame {
         modeloTabela.setRowCount(0);
 
         for (Livro l : lista) {
-            // Lógica NOVA: Consulta o ExemplarDAO
             // Busca quantos estão disponíveis (não emprestados, não reservados)
             List<Exemplar> disponiveis = exemplarDAO.buscarDisponiveisPorLivro(l.getId());
             // Busca o total físico que a biblioteca tem

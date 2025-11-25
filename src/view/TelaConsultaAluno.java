@@ -82,7 +82,7 @@ public class TelaConsultaAluno extends JFrame {
 
         abas.addTab("Empréstimos Ativos", new ImageIcon(), painelAtivos, "Livros que estão comigo agora");
 
-        // --- ABA 2: PROGRAMA DE LEITURA (O QUE DEVO LER?) ---
+        // --- ABA 2: PROGRAMA DE LEITURA ---
         JPanel painelPrograma = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(10, 10, 10, 10);
@@ -203,7 +203,6 @@ public class TelaConsultaAluno extends JFrame {
 
                         lblTituloPrograma.setText("Projeto: " + prog.getTitulo());
 
-                        // LÓGICA NOVA: Verifica Exemplar
                         if (at.getExemplar() != null) {
                             String tit = at.getExemplar().getLivro().getTitulo();
                             long idEx = at.getExemplar().getId();

@@ -15,7 +15,7 @@ public class EmprestimoDAO {
     private static List<Emprestimo> bancoEmprestimos = new ArrayList<>();
     private static long proximoId = 1;
 
-    // --- CARGA INICIAL (Estático) ---
+    // --- CARGA INICIAL ---
     static {
         List<String> linhas = CsvUtil.lerArquivo(ARQUIVO);
         if (!linhas.isEmpty()) {
@@ -28,7 +28,6 @@ public class EmprestimoDAO {
     // --- LÓGICA DE CARREGAR (CSV -> OBJETO) ---
     private static void carregarDoArquivo(List<String> linhas) {
         UsuarioDAO usuarioDAO = new UsuarioDAO();
-        // Necessário ter criado a classe ExemplarDAO conforme o plano anterior
         ExemplarDAO exemplarDAO = new ExemplarDAO();
 
         long maiorId = 0;
@@ -38,7 +37,6 @@ public class EmprestimoDAO {
                 if (linha.trim().isEmpty()) continue;
 
                 String[] dados = linha.split(";");
-                // Layout NOVO: id;id_aluno;id_exemplar;data_emp;data_prev;data_real
 
                 long id = Long.parseLong(dados[0]);
                 long idAluno = Long.parseLong(dados[1]);
@@ -56,7 +54,7 @@ public class EmprestimoDAO {
                 Usuario u = usuarioDAO.buscarPorId(idAluno);
                 Exemplar exemplar = exemplarDAO.buscarPorId(idExemplar);
 
-                // Só cria se o aluno e o exemplar existirem (Integridade Referencial)
+                // Só cria se o aluno e o exemplar existirem
                 if (u instanceof Aluno && exemplar != null) {
                     Emprestimo e = new Emprestimo(id, (Aluno) u, exemplar, dataEmp, dataPrev, dataReal);
                     bancoEmprestimos.add(e);
@@ -80,7 +78,6 @@ public class EmprestimoDAO {
         for (Emprestimo e : bancoEmprestimos) {
             StringBuilder sb = new StringBuilder();
 
-            // Layout NOVO: id;id_aluno;id_exemplar;data_emp;data_prev;data_real
             sb.append(e.getId()).append(";")
                     .append(e.getAluno().getId()).append(";")
                     .append(e.getExemplar().getId()).append(";") // Salva ID do Exemplar
@@ -154,10 +151,7 @@ public class EmprestimoDAO {
         return doAluno;
     }
 
-    /**
-     * Busca empréstimos vinculados a um Livro genérico.
-     * Útil para saber o histórico de "Harry Potter" independentemente de qual cópia física foi usada.
-     */
+    //Busca empréstimos vinculados a um Livro genérico.
     public List<Emprestimo> buscarPorLivro(long idLivro) {
         List<Emprestimo> doLivro = new ArrayList<>();
         for (Emprestimo e : bancoEmprestimos) {
@@ -169,9 +163,8 @@ public class EmprestimoDAO {
         return doLivro;
     }
 
-    /**
-     * Busca empréstimos de um Exemplar físico específico (código de barras).
-     */
+    //Busca empréstimos de um Exemplar físico específico (código de barras).
+
     public List<Emprestimo> buscarPorExemplar(long idExemplar) {
         List<Emprestimo> doExemplar = new ArrayList<>();
         for (Emprestimo e : bancoEmprestimos) {

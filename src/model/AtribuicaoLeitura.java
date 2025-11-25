@@ -2,7 +2,7 @@ package model;
 
 public class AtribuicaoLeitura {
     private Aluno aluno;
-    private Exemplar exemplar; // Mudou de Livro para Exemplar
+    private Exemplar exemplar;
 
     public AtribuicaoLeitura(Aluno aluno, Exemplar exemplar) {
         this.aluno = aluno;

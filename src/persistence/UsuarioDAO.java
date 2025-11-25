@@ -16,7 +16,7 @@ public class UsuarioDAO {
 
         if (linhas.isEmpty()) {
             // SEED DE SEGURANÇA: Se o arquivo não existe, cria o Admin padrão
-            // Isso evita que você fique trancado fora do sistema na primeira execução
+            // Isso fique trancado fora do sistema na primeira execução
             System.out.println("Arquivo de usuários vazio. Criando Admin padrão...");
             Usuario admin = new Administrador("Admin Principal", "admin", "123");
             salvarInterno(admin);
@@ -58,7 +58,7 @@ public class UsuarioDAO {
 
                 switch (tipo) {
                     case "ADMINISTRADOR":
-                    case "ADMIN": // Garantia extra
+                    case "ADMIN":
                         u = new Administrador(id, nome, matricula, senha, ativo);
                         break;
 
@@ -74,7 +74,6 @@ public class UsuarioDAO {
                     case "ALUNO":
                         String turma = (dados.length > 6) ? dados[6] : "";
                         LocalDate dataNasc = null;
-                        // Tratamento robusto de data
                         if (dados.length > 7 && dados[7] != null && !dados[7].equals("null") && !dados[7].trim().isEmpty()) {
                             try {
                                 dataNasc = LocalDate.parse(dados[7].trim());
@@ -119,19 +118,19 @@ public class UsuarioDAO {
             // 2. Monta os dados comuns
             // Layout: id;tipo;nome;matricula;senha;ativo
             sb.append(u.getId()).append(";")
-                    .append(tipo.toUpperCase()).append(";") // Força maiúsculo
+                    .append(tipo.toUpperCase()).append(";")
                     .append(u.getNome()).append(";")
                     .append(u.getMatricula()).append(";")
                     .append(u.getSenha()).append(";")
                     .append(u.isAtivo());
 
-            // 3. Monta os dados extras (Polimorfismo)
+            // 3. Monta os dados extras
             if (u instanceof Aluno) {
                 Aluno a = (Aluno) u;
                 sb.append(";").append(a.getTurma() == null ? "" : a.getTurma());
                 sb.append(";").append(a.getDataNascimento() == null ? "null" : a.getDataNascimento().toString());
             }
-            // IMPORTANTE: O 'else' abaixo garante que Admin/Prof/Biblio
+            // esse else garante que Admin/Prof/Biblio
             // tenham as colunas extras vazias para não quebrar o CSV
             else {
                 sb.append("; ;null");
@@ -144,7 +143,7 @@ public class UsuarioDAO {
         CsvUtil.escreverArquivo(ARQUIVO, linhas, false);
     }
 
-    // --- MÉTODOS CRUD ---
+    // --- CRUD ---
 
     private static void salvarInterno(Usuario u) {
         if (u.getId() == 0) u.setId(proximoId++);
@@ -175,7 +174,7 @@ public class UsuarioDAO {
         }
     }
 
-    // --- MÉTODOS DE CONSULTA (Leitura em Memória - Rápido) ---
+    // --- MÉTODOS DE CONSULTA ---
 
     public List<Usuario> listarTodos() {
         return new ArrayList<>(bancoUsuarios);

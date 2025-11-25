@@ -45,7 +45,7 @@ public class TelaGerenciarEmprestimos extends JFrame {
         // --- FILTROS (NORTE) ---
         JPanel painelNorte = new JPanel(new FlowLayout(FlowLayout.LEFT));
         chkApenasPendentes = new JCheckBox("Mostrar apenas Pendentes/Atrasados");
-        chkApenasPendentes.setSelected(true); // Padrão: só mostra o que está na rua
+        chkApenasPendentes.setSelected(true);
 
         JButton btnAtualizar = new JButton("Atualizar Lista");
 

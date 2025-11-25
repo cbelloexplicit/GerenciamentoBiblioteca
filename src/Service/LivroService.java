@@ -41,8 +41,6 @@ public class LivroService {
             throw new ValidacaoException("A idade mínima não pode ser negativa.");
         }
 
-        // NOTA: Não validamos mais estoque aqui. Isso é responsabilidade do ExemplarService.
-
         boolean novo = (livro.getId() == 0);
         livroDAO.salvar(livro);
 
@@ -59,7 +57,7 @@ public class LivroService {
         }
 
         // Validação de Integridade:
-        // Não podemos apagar o "Titulo" (Metadado) se existem exemplares físicos dele cadastrados.
+        // Não podemos apagar o "Titulo" se existem exemplares físicos dele cadastrados.
         List<Exemplar> exemplaresFisicos = exemplarDAO.buscarPorLivro(id);
 
         if (!exemplaresFisicos.isEmpty()) {

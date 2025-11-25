@@ -10,7 +10,7 @@ public class GeneroDAO {
     private static List<Genero> bancoGeneros = new ArrayList<>();
     private static long proximoId = 1;
 
-    // --- CARGA INICIAL (Estático) ---
+    // --- CARGA INICIAL ---
     static {
         List<String> linhas = CsvUtil.lerArquivo(ARQUIVO);
         if (!linhas.isEmpty()) {
@@ -54,7 +54,7 @@ public class GeneroDAO {
             linhas.add(linha);
         }
 
-        // false = sobrescreve o arquivo todo com a lista atualizada
+        // false = sobrescreve o arquivo com a lista atualizada
         CsvUtil.escreverArquivo(ARQUIVO, linhas, false);
     }
 

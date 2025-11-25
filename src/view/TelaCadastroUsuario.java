@@ -142,7 +142,7 @@ public class TelaCadastroUsuario extends JFrame {
         cmbTurma.removeAllItems();
         List<Turma> turmas = turmaService.listarTodas();
         for (Turma t : turmas) {
-            cmbTurma.addItem(t); // O Java usa o toString() da Turma para exibir o nome
+            cmbTurma.addItem(t);
         }
     }
 
@@ -206,7 +206,6 @@ public class TelaCadastroUsuario extends JFrame {
                     Turma turmaSelecionada = (Turma) cmbTurma.getSelectedItem();
                     if (turmaSelecionada == null) throw new ValidacaoException("Selecione uma turma.");
 
-                    // Como seu Aluno Model usa String para turma, pegamos o nome dela
                     String nomeTurma = turmaSelecionada.getNome();
 
                     // Tratamento da Data

@@ -20,7 +20,7 @@ public class TelaRealizarEmprestimo extends JFrame {
     private JTextField txtMatriculaAluno;
     private JLabel lblNomeAluno;
     private JButton btnBuscarAluno;
-    private JTextArea txtInfoAluno; // Área de texto para mostrar reservas/empréstimos
+    private JTextArea txtInfoAluno;
 
     private JTextField txtIdExemplar;
     private JLabel lblTituloLivro;
@@ -51,14 +51,13 @@ public class TelaRealizarEmprestimo extends JFrame {
 
     private void configurarJanela() {
         setTitle("Registrar Empréstimo");
-        setSize(750, 500); // Mais largo para caber o painel lateral
+        setSize(750, 500);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout(10, 10));
     }
 
     private void inicializarComponentes() {
-        // --- PAINEL CENTRAL (Formulário) ---
         JPanel painelForm = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(10, 10, 10, 10);

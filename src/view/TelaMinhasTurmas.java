@@ -40,7 +40,7 @@ public class TelaMinhasTurmas extends JFrame {
         }
 
         this.turmaService = new TurmaService();
-        this.programaDAO = new ProgramaLeituraDAO(); // Inicializa o DAO
+        this.programaDAO = new ProgramaLeituraDAO();
 
         configurarJanela();
         inicializarComponentes();
@@ -49,7 +49,7 @@ public class TelaMinhasTurmas extends JFrame {
 
     private void configurarJanela() {
         setTitle("Minhas Turmas e Leituras - Prof. " + professorLogado.getNome());
-        setSize(950, 600); // Ligeiramente mais largo para caber o título + ID
+        setSize(950, 600);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout(10, 10));
@@ -76,7 +76,7 @@ public class TelaMinhasTurmas extends JFrame {
         lblDetalhesTurma.setFont(new Font("Arial", Font.BOLD, 16));
 
         lblProgramaAtivo = new JLabel(" ");
-        lblProgramaAtivo.setForeground(new Color(0, 100, 0)); // Verde escuro
+        lblProgramaAtivo.setForeground(new Color(0, 100, 0));
 
         painelInfo.add(lblDetalhesTurma);
         painelInfo.add(lblProgramaAtivo);
@@ -180,7 +180,6 @@ public class TelaMinhasTurmas extends JFrame {
             // Mapeia: Para cada atribuição, guarda "ID Aluno" -> "Título Livro (#ID)"
             for (AtribuicaoLeitura at : programaAtivo.getAtribuicoes()) {
 
-                // MUDANÇA: Verifica getExemplar() em vez de getLivro()
                 if (at.getExemplar() != null) {
                     String info = at.getExemplar().getLivro().getTitulo() +
                             " (Exemplar #" + at.getExemplar().getId() + ")";

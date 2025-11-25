@@ -76,7 +76,7 @@ public class TurmaDAO {
         CsvUtil.escreverArquivo(ARQUIVO, linhas, false);
     }
 
-    // --- MÉTODOS CRUD ---
+    // --- CRUD ---
 
     public void salvar(Turma turma) {
         // Se for edição, remove a antiga
@@ -87,7 +87,7 @@ public class TurmaDAO {
         }
 
         bancoTurmas.add(turma);
-        salvarEmArquivo(); // Grava no disco
+        salvarEmArquivo();
 
         System.out.println("Turma '" + turma.getNome() + "' gravada no CSV.");
     }

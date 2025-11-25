@@ -37,11 +37,10 @@ public class TelaCadastroTurma extends JFrame {
 
     private void configurarJanela() {
         setTitle("Cadastro de Turma");
-        // Tamanho fixo e confortável para não ficar gigante nem minuscula
         setSize(450, 350);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setLocationRelativeTo(null); // Centraliza
-        setResizable(false); // Impede que o usuário quebre o layout esticando
+        setLocationRelativeTo(null);
+        setResizable(false);
 
         getContentPane().setBackground(new Color(60, 60, 60));
         setLayout(new BorderLayout());
@@ -57,17 +56,15 @@ public class TelaCadastroTurma extends JFrame {
         // --- 2. FORMULÁRIO (Centro) ---
         JPanel painelForm = new JPanel(new GridBagLayout());
         painelForm.setBackground(new Color(78, 77, 77));
-        // Cria uma "caixa" com borda ao redor dos campos
         painelForm.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(Color.LIGHT_GRAY),
                 new EmptyBorder(20, 20, 20, 20)
         ));
 
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(10, 5, 10, 5); // Espaçamento entre campos
-        gbc.anchor = GridBagConstraints.WEST;   // Alinha à esquerda
-        gbc.fill = GridBagConstraints.HORIZONTAL; // Estica a caixa de texto
-
+        gbc.insets = new Insets(10, 5, 10, 5);
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
         // -- Campo: Nome --
         gbc.gridx = 0; gbc.gridy = 0;
         gbc.weightx = 0; // Label não estica
@@ -112,8 +109,8 @@ public class TelaCadastroTurma extends JFrame {
         // Adiciona o painel de formulário no centro da janela, com margens
         JPanel containerCentro = new JPanel(new BorderLayout());
         containerCentro.add(painelForm);
-        containerCentro.setBorder(new EmptyBorder(0, 20, 0, 20)); // Margens laterais na janela
-        containerCentro.setBackground(new Color(78, 77, 77)); // Cor de fundo igual à janela
+        containerCentro.setBorder(new EmptyBorder(0, 20, 0, 20));
+        containerCentro.setBackground(new Color(78, 77, 77));
 
         add(containerCentro, BorderLayout.CENTER);
 

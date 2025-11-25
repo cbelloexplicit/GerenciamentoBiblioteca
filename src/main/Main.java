@@ -9,13 +9,9 @@ public class Main {
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception e) {
-            // Se der erro, usa o padrão do Java mesmo, não trava o sistema
             System.err.println("Erro ao configurar tema visual: " + e.getMessage());
         }
 
-        System.out.println("=================================================");
-        System.out.println("      SGBE - SISTEMA DE BIBLIOTECA ESCOLAR       ");
-        System.out.println("=================================================");
         System.out.println("Sistema iniciado com dados de teste (Mock).");
         System.out.println("");
         System.out.println("--- CREDENCIAIS PARA TESTE ---");
@@ -36,7 +32,6 @@ public class Main {
         System.out.println("   Senha:     123");
         System.out.println("=================================================");
 
-        // inicia o sistema
         SwingUtilities.invokeLater(() -> {
             TelaLogin login = new TelaLogin();
             login.setVisible(true);

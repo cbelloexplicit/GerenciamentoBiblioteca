@@ -12,7 +12,7 @@ public class CsvUtil {
     public static List<String> lerArquivo(String nomeArquivo) {
         List<String> linhas = new ArrayList<>();
         File arquivo = new File(nomeArquivo);
-        // Se o arquivo não existe, retorna lista vazia para não quebrar o programa
+        // Se o arquivo não existe, retorna lista vazia pra não quebrar o programa
         if (!arquivo.exists()) {
             return linhas;
         }

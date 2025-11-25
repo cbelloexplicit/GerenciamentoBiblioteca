@@ -4,9 +4,7 @@ import Exception.ValidacaoException;
 import model.Aluno;
 import model.Emprestimo;
 import model.Exemplar;
-import model.Livro;
 import persistence.EmprestimoDAO;
-import persistence.LivroDAO;
 import persistence.ExemplarDAO;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -54,13 +52,11 @@ public class EmprestimoService {
 
         // Atualiza status do Exemplar
         exemplar.setDisponivel(false);
-        // Se ele estava reservado e o aluno pegou, podemos tirar a reserva ou manter até devolver?
-        // Geralmente, ao pegar, a reserva "sai" e vira empréstimo.
         exemplar.setReservado(false);
 
         // Salva tudo
         emprestimoDAO.salvar(novo);
-        // exemplarDAO.salvar(exemplar); // Atualiza o CSV de exemplares
+        exemplarDAO.salvar(exemplar);
 
         logService.registrar("EMPRÉSTIMO: Exemplar " + exemplar.getId() + " (" + exemplar.getLivro().getTitulo() + ") para " + aluno.getNome());
     }
@@ -75,12 +71,12 @@ public class EmprestimoService {
         // Devolve o exemplar ao estoque
         Exemplar ex = emprestimo.getExemplar();
         ex.setDisponivel(true);
-        // ex.setReservado(false); // Já garantimos isso no empréstimo
 
-        // exemplarDAO.salvar(ex);
+
+        exemplarDAO.salvar(ex);
         emprestimoDAO.salvar(emprestimo);
 
-        // Lógica de Multa (Manteve igual)
+        // Lógica de Multa
         String msg = "Devolvido com sucesso.";
         if (emprestimo.getDataDevolucaoReal().isAfter(emprestimo.getDataDevolucaoPrevista())) {
             long dias = ChronoUnit.DAYS.between(emprestimo.getDataDevolucaoPrevista(), emprestimo.getDataDevolucaoReal());

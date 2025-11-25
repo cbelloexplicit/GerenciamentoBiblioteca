@@ -27,12 +27,11 @@ public class ProgramaLeituraDAO {
     private static void carregarDoArquivo(List<String> headers, List<String> detalhes) {
         TurmaDAO turmaDAO = new TurmaDAO();
         UsuarioDAO usuarioDAO = new UsuarioDAO();
-        // Agora usamos ExemplarDAO
         ExemplarDAO exemplarDAO = new ExemplarDAO();
 
         long maiorId = 0;
 
-        // 1. Carregar Headers (Mantido igual)
+        // 1. Carregar Headers
         for (String linha : headers) {
             try {
                 String[] dados = linha.split(";");
@@ -59,11 +58,11 @@ public class ProgramaLeituraDAO {
         }
         proximoId = maiorId + 1;
 
-        // 2. Carregar Detalhes (Agora com ID EXEMPLAR)
+        // 2. Carregar Detalhes
         for (String linha : detalhes) {
             try {
                 String[] dados = linha.split(";");
-                // Layout NOVO: id_programa;id_aluno;ID_EXEMPLAR
+                // Layout id_programa;id_aluno;ID_EXEMPLAR
 
                 long idPrograma = Long.parseLong(dados[0]);
                 long idAluno = Long.parseLong(dados[1]);
@@ -114,7 +113,7 @@ public class ProgramaLeituraDAO {
 
             // 2. Detalhes
             for (AtribuicaoLeitura at : p.getAtribuicoes()) {
-                // Layout NOVO: id_programa;id_aluno;ID_EXEMPLAR
+                // Layout: id_programa;id_aluno;ID_EXEMPLAR
                 StringBuilder sbDet = new StringBuilder();
                 sbDet.append(p.getId()).append(";")
                         .append(at.getAluno().getId()).append(";");

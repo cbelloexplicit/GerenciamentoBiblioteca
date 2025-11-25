@@ -15,7 +15,7 @@ import java.util.List;
 
 public class TelaGerenciarAcervo extends JFrame {
 
-    // Componentes
+    //
     private JTextField txtBusca;
     private JButton btnBuscar;
     private JTable tabelaLivros;
@@ -24,24 +24,24 @@ public class TelaGerenciarAcervo extends JFrame {
     private JButton btnNovo;
     private JButton btnEditar;
     private JButton btnExcluir;
-    private JButton btnExemplares; // NOVO: Botão para adicionar cópias físicas
+    private JButton btnExemplares;
     private JButton btnAtualizar;
 
     private LivroService livroService;
-    private ExemplarDAO exemplarDAO; // NOVO: Para consultar contagem
+    private ExemplarDAO exemplarDAO;
 
     public TelaGerenciarAcervo() {
         this.livroService = new LivroService();
-        this.exemplarDAO = new ExemplarDAO(); // Inicializa DAO
+        this.exemplarDAO = new ExemplarDAO();
 
         configurarJanela();
         inicializarComponentes();
-        atualizarTabela(); // Carrega os dados assim que abre
+        atualizarTabela();
     }
 
     private void configurarJanela() {
         setTitle("Gerenciamento de Acervo (Livros e Exemplares)");
-        setSize(900, 550); // Um pouco mais larga para caber os botões
+        setSize(900, 550);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
@@ -65,7 +65,6 @@ public class TelaGerenciarAcervo extends JFrame {
         add(painelBusca, BorderLayout.NORTH);
 
         // --- 2. PAINEL CENTRAL (TABELA) ---
-        // Colunas atualizadas
         String[] colunas = {"ID", "Título", "Autor", "Gênero", "Idade Mín.", "Estoque (Disp / Total)"};
 
         modeloTabela = new DefaultTableModel(colunas, 0) {
@@ -77,10 +76,8 @@ public class TelaGerenciarAcervo extends JFrame {
 
         tabelaLivros = new JTable(modeloTabela);
         tabelaLivros.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        // Aumenta a altura da linha para ficar mais legível
         tabelaLivros.setRowHeight(25);
 
-        // Ajuste de largura das colunas
         tabelaLivros.getColumnModel().getColumn(1).setPreferredWidth(200); // Título
         tabelaLivros.getColumnModel().getColumn(5).setPreferredWidth(120); // Estoque
 
@@ -92,7 +89,7 @@ public class TelaGerenciarAcervo extends JFrame {
         btnNovo = new JButton("Novo Título");
         btnNovo.setBackground(new Color(100, 200, 100)); // Verde
 
-        btnExemplares = new JButton("Gerenciar Exemplares"); // Botão Novo
+        btnExemplares = new JButton("Gerenciar Exemplares");
         btnExemplares.setToolTipText("Adicionar ou remover cópias físicas deste livro");
         btnExemplares.setBackground(new Color(100, 149, 237)); // Azul
 
@@ -160,7 +157,7 @@ public class TelaGerenciarAcervo extends JFrame {
         modeloTabela.setRowCount(0);
 
         for (Livro l : lista) {
-            // LÓGICA NOVA: Consulta o DAO de exemplares para saber as quantidades
+            // LÓGICA: Consulta o DAO de exemplares para saber as quantidades
             List<Exemplar> totalExemplares = exemplarDAO.buscarPorLivro(l.getId());
             List<Exemplar> disponiveis = exemplarDAO.buscarDisponiveisPorLivro(l.getId());
 
@@ -177,11 +174,6 @@ public class TelaGerenciarAcervo extends JFrame {
             modeloTabela.addRow(linha);
         }
     }
-
-    /**
-     * Funcionalidade rápida para adicionar exemplares físicos
-     * já que removemos a quantidade da tela de cadastro.
-     */
     private void gerenciarExemplares() {
         int linha = tabelaLivros.getSelectedRow();
         if (linha == -1) {
@@ -234,7 +226,6 @@ public class TelaGerenciarAcervo extends JFrame {
 
         if (confirmacao == JOptionPane.YES_OPTION) {
             try {
-                // O Service agora verifica se existem exemplares antes de deixar apagar
                 livroService.remover(idLivro);
                 atualizarTabela();
                 JOptionPane.showMessageDialog(this, "Livro excluído.");

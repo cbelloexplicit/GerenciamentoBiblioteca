@@ -43,7 +43,6 @@ public class MenuPrincipal extends JFrame {
         setSize(900, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
-        // Layout principal centralizado
         setLayout(new GridBagLayout());
     }
 
